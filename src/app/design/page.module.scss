@@ -1,0 +1,681 @@
+:root {
+  --color-volt-50: #{colors.$color-volt-50};
+  --color-volt-100: #{colors.$color-volt-100};
+  --color-volt-300: #{colors.$color-volt-300};
+  --color-volt-500: #{colors.$color-volt-500};
+  --color-volt-700: #{colors.$color-volt-700};
+  --color-volt-900: #{colors.$color-volt-900};
+  --color-ember-50: #{colors.$color-ember-50};
+  --color-ember-100: #{colors.$color-ember-100};
+  --color-ember-300: #{colors.$color-ember-300};
+  --color-ember-500: #{colors.$color-ember-500};
+  --color-ember-700: #{colors.$color-ember-700};
+  --color-ember-900: #{colors.$color-ember-900};
+  --color-neutral-50: #{colors.$color-neutral-50};
+  --color-neutral-200: #{colors.$color-neutral-200};
+  --color-neutral-400: #{colors.$color-neutral-400};
+  --color-neutral-600: #{colors.$color-neutral-600};
+  --color-neutral-800: #{colors.$color-neutral-800};
+  --color-neutral-950: #{colors.$color-neutral-950};
+  --color-success: #{colors.$color-success};
+  --color-warning: #{colors.$color-warning};
+  --color-error: #{colors.$color-error};
+  --color-info: #{colors.$color-info};
+}
+
+.wrap {
+  max-width: 1160px;
+  margin: 0 auto;
+  padding: variables.$space-12 variables.$space-6 7.5rem;
+  background: colors.$color-neutral-50;
+  color: colors.$color-neutral-900;
+}
+
+.hero {
+  position: relative;
+  overflow: hidden;
+  margin-bottom: variables.$space-16;
+  padding: variables.$space-16 3rem;
+  border-radius: variables.$radius-2xl;
+  background:
+    radial-gradient(1200px 400px at 120% -20%, rgb(255 90 54 / 35%), transparent 60%),
+    radial-gradient(900px 500px at -10% 120%, rgb(0 212 168 / 25%), transparent 60%),
+    linear-gradient(135deg, colors.$color-volt-700, colors.$color-volt-500);
+  color: colors.$color-neutral-0;
+  box-shadow: variables.$shadow-xl;
+
+  h1 {
+    margin: 0 0 variables.$space-4;
+    font-size: 4rem;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+  }
+
+  p {
+    max-width: 40rem;
+    margin: 0;
+    font-size: 1.25rem;
+    opacity: 0.92;
+  }
+}
+
+.version {
+  position: absolute;
+  top: variables.$space-6;
+  right: variables.$space-6;
+  padding: 0.375rem 0.75rem;
+  border-radius: variables.$radius-full;
+  background: rgb(255 255 255 / 15%);
+  font-size: 0.75rem;
+}
+
+.eyebrow {
+  margin-bottom: variables.$space-3;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.8;
+}
+
+.section {
+  margin-bottom: 4.5rem;
+}
+
+.sectionHead {
+  margin-bottom: variables.$space-6;
+  padding-bottom: variables.$space-4;
+  border-bottom: 1px solid colors.$color-neutral-200;
+
+  h2 {
+    margin: 0;
+    font-size: 2rem;
+    letter-spacing: -0.02em;
+  }
+}
+
+.kicker {
+  margin-bottom: 0.375rem;
+  color: colors.$color-neutral-500;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.rampLabel {
+  margin: variables.$space-6 0 variables.$space-3;
+  color: colors.$color-neutral-500;
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.grid {
+  display: grid;
+  gap: variables.$space-4;
+}
+
+.cols6 {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.cols4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.cols3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.cols2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.swatch {
+  overflow: hidden;
+  border: 1px solid colors.$color-neutral-200;
+  border-radius: variables.$radius-lg;
+  background: colors.$color-neutral-0;
+  box-shadow: variables.$shadow-xs;
+}
+
+.chip {
+  height: 4.5rem;
+}
+
+.meta {
+  padding: 0.625rem 0.75rem;
+  font-size: 0.6875rem;
+}
+
+.name {
+  display: block;
+  font-weight: 600;
+  color: colors.$color-neutral-900;
+}
+
+.hex {
+  color: colors.$color-neutral-500;
+}
+
+.card {
+  @include card-surface;
+  padding: 1.25rem;
+
+  h4 {
+    margin: 0 0 variables.$space-4;
+    font-size: 1rem;
+  }
+}
+
+.typeRow {
+  display: grid;
+  grid-template-columns: 140px 1fr 120px;
+  gap: variables.$space-6;
+  align-items: baseline;
+  padding: variables.$space-4 0;
+  border-bottom: 1px dashed colors.$color-neutral-200;
+}
+
+.bodyRow .sample {
+  font-family: var(--font-geist-sans), sans-serif;
+}
+
+.tag,
+.size {
+  color: colors.$color-neutral-500;
+  font-size: 0.75rem;
+}
+
+.size {
+  text-align: right;
+}
+
+.sample {
+  color: colors.$color-neutral-900;
+}
+
+.display5xl {
+  font-size: 3rem;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+.display3xl {
+  font-size: 1.875rem;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+.spacingViz {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 0;
+}
+
+.bar2,
+.bar4,
+.bar6,
+.bar8 {
+  height: 1rem;
+  border-radius: variables.$radius-sm;
+  background: colors.$color-volt-500;
+}
+
+.bar2 {
+  width: 0.5rem;
+}
+
+.bar4 {
+  width: 1rem;
+}
+
+.bar6 {
+  width: 1.5rem;
+}
+
+.bar8 {
+  width: 2rem;
+}
+
+.radiusDemo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: variables.$space-4;
+}
+
+.box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 4.5rem;
+  height: 4.5rem;
+  border: 1px solid colors.$color-volt-300;
+  background: colors.$color-volt-100;
+  color: colors.$color-volt-700;
+  font-size: 0.6875rem;
+}
+
+.radiusSm {
+  border-radius: variables.$radius-sm;
+}
+
+.radiusMd {
+  border-radius: variables.$radius-md;
+}
+
+.radiusLg {
+  border-radius: variables.$radius-lg;
+}
+
+.radiusXl {
+  border-radius: variables.$radius-xl;
+}
+
+.vrow {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.shadowDemo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  align-items: center;
+  padding: variables.$space-6;
+  border-radius: variables.$radius-lg;
+  background: colors.$color-neutral-0;
+  color: colors.$color-neutral-500;
+  font-size: 0.6875rem;
+}
+
+.shadowBox {
+  width: 100%;
+  height: 5rem;
+  border-radius: variables.$radius-md;
+  background: colors.$color-neutral-0;
+}
+
+.shadowSm {
+  box-shadow: variables.$shadow-sm;
+}
+
+.shadowMd {
+  box-shadow: variables.$shadow-md;
+}
+
+.shadowGlow {
+  box-shadow: variables.$shadow-glow-volt;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 2.5rem;
+  padding: 0 1rem;
+  border: 1px solid transparent;
+  border-radius: variables.$radius-md;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background variables.$dur-fast variables.$ease-std,
+    box-shadow variables.$dur-fast variables.$ease-std;
+}
+
+.btnPrimary {
+  background: colors.$color-volt-500;
+  color: colors.$color-neutral-0;
+}
+
+.btnSecondary {
+  background: colors.$color-neutral-0;
+  border-color: colors.$color-neutral-300;
+  color: colors.$color-neutral-900;
+}
+
+.btnGhost {
+  background: transparent;
+  color: colors.$color-neutral-900;
+}
+
+.btnDestructive {
+  background: colors.$color-error;
+  color: colors.$color-neutral-0;
+}
+
+.featureStrip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: variables.$space-6;
+  margin-top: variables.$space-8;
+}
+
+.featureItem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  font-size: 0.75rem;
+  color: rgb(255 255 255 / 80%);
+
+  strong {
+    color: colors.$color-neutral-0;
+    font-size: 1.25rem;
+  }
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  max-width: 20rem;
+
+  label {
+    font-size: 0.8125rem;
+    font-weight: 500;
+  }
+}
+
+.input {
+  height: 2.5rem;
+  padding: 0 0.75rem;
+  border: 1px solid colors.$color-neutral-300;
+  border-radius: variables.$radius-md;
+  background: colors.$color-neutral-0;
+  color: colors.$color-neutral-900;
+}
+
+.helper {
+  color: colors.$color-neutral-500;
+  font-size: 0.75rem;
+}
+
+.fieldError {
+  .input {
+    border-color: colors.$color-error;
+  }
+
+  .helper {
+    color: colors.$color-error;
+  }
+}
+
+.demoCard {
+  padding: 1.25rem;
+  border: 1px solid colors.$color-neutral-200;
+  border-radius: variables.$radius-lg;
+  background: colors.$color-neutral-0;
+  box-shadow: variables.$shadow-sm;
+
+  h4 {
+    margin: 0 0 0.25rem;
+    font-size: 1.125rem;
+  }
+
+  p {
+    margin: 0 0 variables.$space-4;
+    color: colors.$color-neutral-600;
+    font-size: 0.875rem;
+  }
+}
+
+.statRow {
+  display: flex;
+  align-items: baseline;
+  gap: variables.$space-2;
+}
+
+.statValue {
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.125rem 0.625rem;
+  border-radius: variables.$radius-full;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.dot {
+  width: 0.375rem;
+  height: 0.375rem;
+  border-radius: variables.$radius-full;
+  background: currentcolor;
+}
+
+.badgeSolidVolt {
+  color: colors.$color-neutral-0;
+  background: colors.$color-volt-500;
+}
+
+.badgeSoftVolt {
+  color: colors.$color-volt-700;
+  background: colors.$color-volt-50;
+}
+
+.badgeOutline {
+  color: colors.$color-neutral-900;
+  border: 1px solid colors.$color-neutral-300;
+  background: transparent;
+}
+
+.badgeSuccess {
+  color: #047857;
+  background: colors.$color-success-bg;
+}
+
+.badgeWarning {
+  color: #b45309;
+  background: colors.$color-warning-bg;
+}
+
+.badgeError {
+  color: #b91c1c;
+  background: colors.$color-error-bg;
+}
+
+.avatarGroup {
+  display: flex;
+}
+
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  margin-left: -0.5rem;
+  border: 2px solid colors.$color-neutral-0;
+  border-radius: variables.$radius-full;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: colors.$color-neutral-0;
+  background: colors.$color-volt-500;
+
+  &:first-child {
+    margin-left: 0;
+  }
+}
+
+.avatarEmber {
+  background: colors.$color-ember-500;
+}
+
+.avatarMint {
+  background: colors.$color-mint-500;
+}
+
+.avatarNeutral {
+  background: colors.$color-neutral-400;
+}
+
+.toast {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  max-width: 27.5rem;
+  padding: 0.875rem 1rem;
+  border: 1px solid colors.$color-neutral-200;
+  border-radius: variables.$radius-lg;
+  background: colors.$color-neutral-0;
+  box-shadow: variables.$shadow-lg;
+}
+
+.icon {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: variables.$radius-full;
+  color: colors.$color-neutral-0;
+  font-weight: 700;
+}
+
+.toastSuccess .icon {
+  background: colors.$color-success;
+}
+
+.toastWarning .icon {
+  background: colors.$color-warning;
+}
+
+.toastError .icon {
+  background: colors.$color-error;
+}
+
+.title {
+  margin-bottom: 0.125rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.desc {
+  color: colors.$color-neutral-600;
+  font-size: 0.875rem;
+}
+
+.tabs {
+  display: flex;
+  gap: 0.25rem;
+  margin-bottom: variables.$space-4;
+  border-bottom: 1px solid colors.$color-neutral-200;
+}
+
+.tab {
+  margin-bottom: -1px;
+  padding: 0.625rem 0.875rem;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: colors.$color-neutral-600;
+  font-size: 0.875rem;
+}
+
+.tabActive {
+  border-bottom-color: colors.$color-volt-500;
+  color: colors.$color-volt-600;
+}
+
+.tabBody {
+  margin: 0;
+  color: colors.$color-neutral-600;
+  font-size: 0.875rem;
+}
+
+.data {
+  overflow: hidden;
+  width: 100%;
+  border: 1px solid colors.$color-neutral-200;
+  border-radius: variables.$radius-lg;
+  border-collapse: collapse;
+  background: colors.$color-neutral-0;
+  font-size: 0.875rem;
+
+  th,
+  td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid colors.$color-neutral-200;
+    text-align: left;
+  }
+
+  th {
+    background: colors.$color-neutral-50;
+    color: colors.$color-neutral-500;
+    font-size: 0.75rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  tr:last-child td {
+    border-bottom: 0;
+  }
+}
+
+.modalPreview {
+  max-width: 27.5rem;
+  padding: variables.$space-6;
+  border: 1px solid colors.$color-neutral-200;
+  border-radius: variables.$radius-xl;
+  background: colors.$color-neutral-0;
+  box-shadow: variables.$shadow-2xl;
+
+  h4 {
+    margin: 0 0 variables.$space-2;
+    font-size: 1.25rem;
+  }
+
+  p {
+    margin: 0 0 variables.$space-5;
+    color: colors.$color-neutral-600;
+    font-size: 0.875rem;
+  }
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: variables.$space-2;
+}
+
+@media (max-width: 900px) {
+  .cols6,
+  .cols4,
+  .cols3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .cols2 {
+    grid-template-columns: 1fr;
+  }
+
+  .hero {
+    padding: variables.$space-10 variables.$space-6;
+
+    h1 {
+      font-size: 3rem;
+    }
+  }
+
+  .typeRow {
+    grid-template-columns: 1fr;
+    gap: variables.$space-2;
+  }
+
+  .size {
+    text-align: left;
+  }
+}

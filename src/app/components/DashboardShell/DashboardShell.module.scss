@@ -1,0 +1,810 @@
+.shell {
+  min-height: 100vh;
+  padding: variables.$space-8;
+  background: colors.$color-bg;
+  color: colors.$color-text;
+  font-family: var(--font-geist-sans), sans-serif;
+}
+
+.frame {
+  display: grid;
+  grid-template-columns: 14rem 1fr;
+  min-height: calc(100vh - (variables.$space-8 * 2));
+  border: 1px solid colors.$color-neutral-200;
+  border-radius: variables.$radius-2xl;
+  background: colors.$color-neutral-0;
+  box-shadow: variables.$shadow-xl;
+  overflow: hidden;
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: variables.$space-8 variables.$space-4;
+  border-right: 1px solid colors.$color-neutral-200;
+  background: colors.$color-neutral-50;
+}
+
+.brand {
+  margin: 0 0 variables.$space-8;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.navGroup {
+  display: flex;
+  flex-direction: column;
+  gap: variables.$space-2;
+}
+
+.navItem {
+  display: inline-flex;
+  align-items: center;
+  gap: variables.$space-2;
+  width: 100%;
+  padding: variables.$space-2 variables.$space-3;
+  border: 1px solid transparent;
+  border-radius: variables.$radius-full;
+  background: transparent;
+  color: colors.$color-neutral-700;
+  font-size: 0.8125rem;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background variables.$dur-fast variables.$ease-std,
+    border-color variables.$dur-fast variables.$ease-std;
+}
+
+.navItemActive {
+  border-color: colors.$color-neutral-300;
+  background: colors.$color-neutral-0;
+  color: colors.$color-neutral-900;
+}
+
+.navIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.125rem;
+  height: 1.125rem;
+  border-radius: variables.$radius-full;
+  background: colors.$color-volt-100;
+  color: colors.$color-volt-700;
+  font-size: 0.625rem;
+  font-weight: 700;
+}
+
+.navBadge {
+  margin-left: auto;
+  padding: 0 variables.$space-2;
+  border-radius: variables.$radius-full;
+  background: colors.$color-ember-500;
+  color: colors.$color-neutral-0;
+  font-size: 0.625rem;
+}
+
+.sidebarBottom {
+  display: grid;
+  gap: variables.$space-2;
+}
+
+.devToggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: variables.$space-2 variables.$space-3;
+  border: 1px solid colors.$color-neutral-300;
+  border-radius: variables.$radius-md;
+  background: colors.$color-neutral-0;
+  color: colors.$color-neutral-900;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.devToggleDescription {
+  margin: 0;
+  color: colors.$color-subtle;
+  font-size: 0.6875rem;
+  line-height: 1.3;
+}
+
+.devToggleTrack {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  width: 2rem;
+  height: 1.125rem;
+  padding: 0.125rem;
+  border-radius: variables.$radius-full;
+  background: colors.$color-neutral-300;
+  transition: background variables.$dur-base variables.$ease-std;
+}
+
+.devToggleTrackOn {
+  background: colors.$color-mint-500;
+}
+
+.devToggleThumb {
+  display: block;
+  width: 0.875rem;
+  height: 0.875rem;
+  border-radius: variables.$radius-full;
+  background: colors.$color-neutral-0;
+  box-shadow: variables.$shadow-xs;
+  transition: transform variables.$dur-base variables.$ease-std;
+}
+
+.devToggleTrackOn .devToggleThumb {
+  transform: translateX(0.875rem);
+}
+
+.main {
+  padding: variables.$space-6;
+  background: colors.$color-neutral-100;
+}
+
+.topBar {
+  display: flex;
+  justify-content: space-between;
+  gap: variables.$space-4;
+  margin-bottom: variables.$space-6;
+}
+
+.searchBox {
+  min-width: 16rem;
+  padding: variables.$space-2 variables.$space-4;
+  border: 1px solid colors.$color-neutral-200;
+  border-radius: variables.$radius-full;
+  background: colors.$color-neutral-0;
+  color: colors.$color-subtle;
+  font-size: 0.875rem;
+}
+
+.topActions {
+  display: flex;
+  align-items: center;
+  gap: variables.$space-2;
+}
+
+.actionChip {
+  padding: variables.$space-2 variables.$space-4;
+  border: 1px solid transparent;
+  border-radius: variables.$radius-full;
+  background: colors.$color-mint-500;
+  color: colors.$color-neutral-950;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid colors.$color-neutral-300;
+  border-radius: variables.$radius-full;
+  background: colors.$color-neutral-0;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.dashboardGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.65fr) minmax(16rem, 0.85fr);
+  gap: variables.$space-4;
+}
+
+.mainColumn,
+.rightRail {
+  display: grid;
+  gap: variables.$space-4;
+  align-content: start;
+}
+
+.statsRow {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: variables.$space-4;
+}
+
+.panelCard,
+.statCard,
+.ctrCard {
+  @include card-surface;
+  border-radius: variables.$radius-xl;
+  padding: variables.$space-5;
+  box-shadow: variables.$shadow-xs;
+}
+
+.statLabel,
+.paymentSub,
+.transactionDate {
+  color: colors.$color-subtle;
+  font-size: 0.75rem;
+}
+
+.statLabel {
+  margin-bottom: variables.$space-3;
+}
+
+.statValueRow {
+  display: flex;
+  align-items: center;
+  gap: variables.$space-2;
+}
+
+.statValue {
+  margin: 0;
+  font-size: 2rem;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.statDelta {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 variables.$space-2;
+  border-radius: variables.$radius-full;
+  background: colors.$color-success-bg;
+  color: colors.$color-success;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.cardHeadingRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: variables.$space-2;
+  margin-bottom: variables.$space-4;
+}
+
+.cardTitle {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.moreButton {
+  color: colors.$color-subtle;
+  letter-spacing: 0.15em;
+}
+
+.miniBars {
+  height: 7.5rem;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0.75rem, 1fr);
+  align-items: end;
+  gap: variables.$space-2;
+  margin-top: variables.$space-4;
+}
+
+.miniBarGroup {
+  display: grid;
+  gap: variables.$space-1;
+  justify-items: center;
+}
+
+.miniBarTrack {
+  position: relative;
+  width: 100%;
+  height: 6.5rem;
+}
+
+.miniBarBack,
+.miniBarFront {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  border-radius: variables.$radius-sm;
+  animation: grow-bar 700ms variables.$ease-std both;
+}
+
+.miniBarBack {
+  height: var(--bar-height, 0%);
+  background: colors.$color-neutral-200;
+}
+
+.miniBarFront {
+  width: 70%;
+  left: 15%;
+  height: var(--bar-height, 0%);
+  background: colors.$color-ember-500;
+}
+
+.miniBarLabel {
+  font-size: 0.625rem;
+  color: colors.$color-subtle;
+}
+
+.paymentGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: variables.$space-3;
+}
+
+.paymentCard {
+  padding: variables.$space-4;
+  border: 1px solid colors.$color-neutral-200;
+  border-radius: variables.$radius-lg;
+  background: colors.$color-neutral-50;
+}
+
+.paymentIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: variables.$radius-md;
+  background: colors.$color-volt-700;
+  color: colors.$color-neutral-0;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.paymentTitle {
+  margin: variables.$space-3 0 variables.$space-1;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.paymentSub {
+  margin: 0 0 variables.$space-3;
+}
+
+.paymentAmount {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.sortButton {
+  padding: variables.$space-1 variables.$space-3;
+  border: 1px solid colors.$color-neutral-300;
+  border-radius: variables.$radius-md;
+  background: colors.$color-neutral-0;
+  color: colors.$color-subtle;
+  font-size: 0.75rem;
+}
+
+.transactionList {
+  display: grid;
+}
+
+.transactionRow {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr auto;
+  gap: variables.$space-3;
+  align-items: center;
+  padding: variables.$space-3 0;
+  border-bottom: 1px solid colors.$color-neutral-200;
+}
+
+.transactionRow:last-child {
+  border-bottom: 0;
+}
+
+.transactionCategory,
+.transactionAmount {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.transactionDate {
+  margin: 0;
+}
+
+.locationGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  gap: variables.$space-4;
+  align-items: start;
+}
+
+.mapPlaceholder {
+  display: grid;
+  place-items: center;
+  min-height: 12rem;
+  border: 1px dashed colors.$color-neutral-300;
+  border-radius: variables.$radius-lg;
+  background: linear-gradient(180deg, colors.$color-neutral-100, colors.$color-neutral-0);
+  color: colors.$color-subtle;
+  font-size: 0.8125rem;
+}
+
+.countryList {
+  display: grid;
+  gap: variables.$space-3;
+}
+
+.countryRow {
+  display: grid;
+}
+
+.countryTextRow {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: variables.$space-1;
+  font-size: 0.75rem;
+}
+
+.countryTrack {
+  height: 0.375rem;
+  border-radius: variables.$radius-full;
+  background: colors.$color-neutral-200;
+  overflow: hidden;
+}
+
+.countryFill {
+  display: block;
+  width: var(--country-width, 0%);
+  height: 100%;
+  border-radius: inherit;
+  background: colors.$color-accent;
+}
+
+.rangeButtons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: variables.$space-1;
+}
+
+.rangeButton {
+  padding: 0.125rem variables.$space-2;
+  border: 1px solid colors.$color-neutral-300;
+  border-radius: variables.$radius-full;
+  background: colors.$color-neutral-0;
+  color: colors.$color-subtle;
+  font-size: 0.6875rem;
+  text-transform: capitalize;
+}
+
+.rangeButtonActive {
+  border-color: colors.$color-mint-500;
+  background: colors.$color-mint-500;
+  color: colors.$color-neutral-950;
+}
+
+.spendingTotal {
+  margin: 0 0 variables.$space-4;
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.chartBars {
+  height: 10rem;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0.75rem, 1fr);
+  gap: variables.$space-2;
+  align-items: end;
+}
+
+.barItem {
+  display: grid;
+  gap: variables.$space-1;
+  justify-items: center;
+}
+
+.barTrack {
+  position: relative;
+  width: 100%;
+  height: 8.5rem;
+  border-radius: variables.$radius-sm;
+  background: colors.$color-neutral-100;
+  border: 1px solid colors.$color-neutral-200;
+}
+
+.barFill {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  height: var(--bar-height, 0%);
+  border-radius: variables.$radius-sm;
+  background: linear-gradient(180deg, colors.$color-volt-300 0%, colors.$color-volt-500 100%);
+  animation: grow-bar 700ms variables.$ease-std both;
+  transform-origin: bottom;
+}
+
+.barLabel {
+  font-size: 0.625rem;
+  color: colors.$color-subtle;
+}
+
+.sentimentWrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: variables.$space-2;
+}
+
+.sentimentScore {
+  margin: 0;
+  font-size: 3rem;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.sentimentBadge {
+  padding: 0 variables.$space-2;
+  border-radius: variables.$radius-full;
+  background: colors.$color-success-bg;
+  color: colors.$color-success;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.avatarGroup {
+  display: flex;
+  margin-top: variables.$space-4;
+}
+
+.customerAvatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  margin-left: -0.5rem;
+  border: 2px solid colors.$color-neutral-0;
+  border-radius: variables.$radius-full;
+  background: colors.$color-volt-500;
+  color: colors.$color-neutral-0;
+  font-size: 0.625rem;
+  font-weight: 700;
+}
+
+.customerAvatar:first-child {
+  margin-left: 0;
+}
+
+.audienceCard {
+  padding-bottom: variables.$space-4;
+}
+
+.audienceFilters {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.1875rem;
+  border: 1px solid colors.$color-neutral-200;
+  border-radius: variables.$radius-full;
+  background: colors.$color-neutral-50;
+}
+
+.audienceFilterButton {
+  padding: 0.375rem 0.75rem;
+  border: 0;
+  border-radius: variables.$radius-full;
+  background: transparent;
+  color: colors.$color-subtle;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.audienceFilterButtonActive {
+  background: #eef400;
+  color: colors.$color-neutral-950;
+}
+
+.audienceChart {
+  display: grid;
+  grid-template-columns: 2rem 1fr;
+  gap: variables.$space-2;
+  margin-top: variables.$space-3;
+}
+
+.audienceYAxis {
+  display: grid;
+  align-content: space-between;
+  padding: 0.375rem 0 0.625rem;
+  color: colors.$color-subtle;
+  font-size: 0.625rem;
+}
+
+.audiencePlotWrap {
+  position: relative;
+  border-bottom: 1px solid colors.$color-neutral-200;
+}
+
+.audienceSvg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.audienceLine {
+  stroke: colors.$color-info;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.audienceArea {
+  fill: url(#audienceAreaGradient);
+}
+
+.audienceGuideLine {
+  stroke: rgb(59 130 246 / 45%);
+  stroke-width: 1;
+  stroke-dasharray: 5 4;
+}
+
+.audiencePoint {
+  fill: colors.$color-neutral-0;
+  stroke: colors.$color-info;
+  stroke-width: 2;
+}
+
+.audienceTooltip {
+  position: absolute;
+  top: 3.125rem;
+  left: 37%;
+  transform: translateX(-50%);
+  padding: 0.25rem 0.5rem;
+  border-radius: variables.$radius-md;
+  background: colors.$color-neutral-900;
+  color: colors.$color-neutral-0;
+  font-size: 0.6875rem;
+  font-weight: 600;
+}
+
+.audienceXAxis {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  margin-left: 2.625rem;
+  margin-top: variables.$space-2;
+  color: colors.$color-subtle;
+  font-size: 0.6875rem;
+}
+
+.devInspectLayer {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  pointer-events: none;
+}
+
+.devInspectTooltip {
+  position: fixed;
+  width: 20rem;
+  max-width: calc(100vw - 1.5rem);
+  padding: variables.$space-3;
+  border: 1px solid colors.$color-neutral-200;
+  border-radius: variables.$radius-lg;
+  background: rgb(255 255 255 / 96%);
+  box-shadow: variables.$shadow-lg;
+  backdrop-filter: blur(6px);
+}
+
+.devInspectTitle {
+  margin: 0;
+  color: colors.$color-volt-700;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.devInspectTarget {
+  margin: variables.$space-1 0 variables.$space-3;
+  color: colors.$color-neutral-900;
+  font-size: 0.75rem;
+  font-weight: 600;
+  word-break: break-word;
+}
+
+.devInspectRows {
+  display: grid;
+  gap: variables.$space-2;
+}
+
+.devInspectRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: variables.$space-2;
+  padding-bottom: variables.$space-1;
+  border-bottom: 1px dashed colors.$color-neutral-200;
+}
+
+.devInspectRow:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.devInspectKey {
+  color: colors.$color-subtle;
+  font-size: 0.6875rem;
+  white-space: nowrap;
+}
+
+.devInspectMeta {
+  display: inline-flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: variables.$space-2;
+  min-width: 0;
+}
+
+.devInspectValue {
+  color: colors.$color-neutral-700;
+  font-size: 0.6875rem;
+  max-width: 8rem;
+  text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.devInspectToken {
+  padding: 0 variables.$space-1;
+  border-radius: variables.$radius-sm;
+  font-size: 0.625rem;
+  font-weight: 700;
+}
+
+.devInspectTokenMatched {
+  background: colors.$color-volt-100;
+  color: colors.$color-volt-700;
+}
+
+.devInspectTokenRaw {
+  background: colors.$color-neutral-100;
+  color: colors.$color-subtle;
+}
+
+@keyframes grow-bar {
+  from {
+    transform: scaleY(0);
+  }
+
+  to {
+    transform: scaleY(1);
+  }
+}
+
+@media (max-width: 1200px) {
+  .frame {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    border-right: 0;
+    border-bottom: 1px solid colors.$color-neutral-200;
+    gap: variables.$space-4;
+  }
+
+  .dashboardGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 900px) {
+  .shell {
+    padding: variables.$space-4;
+  }
+
+  .statsRow,
+  .paymentGrid,
+  .locationGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .audienceXAxis {
+    margin-left: 2.375rem;
+  }
+
+  .topBar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
