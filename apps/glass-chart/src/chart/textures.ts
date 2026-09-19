@@ -6,6 +6,31 @@ import * as THREE from 'three';
  * perfectly uniform reads as plastic, and a brushed metal needs its grain.
  */
 
+function makeRgbTexture(
+  size: number,
+  fill: (x: number, y: number) => [number, number, number],
+) {
+  const data = new Uint8Array(size * size * 4);
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      const i = (y * size + x) * 4;
+      const [r, g, b] = fill(x, y);
+      data[i] = Math.max(0, Math.min(255, Math.round(r * 255)));
+      data[i + 1] = Math.max(0, Math.min(255, Math.round(g * 255)));
+      data[i + 2] = Math.max(0, Math.min(255, Math.round(b * 255)));
+      data[i + 3] = 255;
+    }
+  }
+  const texture = new THREE.DataTexture(data, size, size);
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.wrapT = THREE.RepeatWrapping;
+  texture.minFilter = THREE.LinearMipmapLinearFilter;
+  texture.magFilter = THREE.LinearFilter;
+  texture.generateMipmaps = true;
+  texture.needsUpdate = true;
+  return texture;
+}
+
 function makeDataTexture(size: number, fill: (x: number, y: number) => number) {
   const data = new Uint8Array(size * size * 4);
   for (let y = 0; y < size; y++) {
@@ -95,4 +120,43 @@ export function brushedRoughness() {
   brushed = makeDataTexture(size, (x, y) => 0.1 + streak(x, y * 0.06) * 0.26 + drift(x, y) * 0.07);
   brushed.repeat.set(3, 1);
   return brushed;
+}
+
+let frostRough: THREE.Texture | null = null;
+
+/** Broad, shallow variation: etched glass is uneven, not grainy. */
+export function frostRoughness() {
+  if (frostRough) return frostRough;
+  const size = 256;
+  const broad = valueNoise(size, 14, 211);
+  const fine = valueNoise(size, 56, 89);
+  frostRough = makeDataTexture(size, (x, y) => 0.24 + broad(x, y) * 0.5 + fine(x, y) * 0.16);
+  frostRough.repeat.set(2, 4);
+  return frostRough;
+}
+
+let frostNorm: THREE.Texture | null = null;
+
+/**
+ * Tangent-space normals derived from the same kind of noise, so the frosting
+ * bends light rather than only dulling it — a roughness map alone flattens
+ * the surface instead of scattering across it.
+ *
+ * three perturbs normals from screen-space derivatives when a mesh has no
+ * tangents, so a plain box needs no extra attributes for this.
+ */
+export function frostNormal() {
+  if (frostNorm) return frostNorm;
+  const size = 256;
+  const height = valueNoise(size, 28, 401);
+  const strength = 2.4;
+  frostNorm = makeRgbTexture(size, (x, y) => {
+    // Central differences on the height field give the surface gradient.
+    const dx = (height(x + 1, y) - height(x - 1, y)) * strength;
+    const dy = (height(x, y + 1) - height(x, y - 1)) * strength;
+    const len = Math.hypot(dx, dy, 1);
+    return [(-dx / len) * 0.5 + 0.5, (-dy / len) * 0.5 + 0.5, 1 / len * 0.5 + 0.5];
+  });
+  frostNorm.repeat.set(2, 4);
+  return frostNorm;
 }

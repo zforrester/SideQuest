@@ -24,14 +24,32 @@ function baseAnchored(geometry: THREE.BufferGeometry) {
   return geometry;
 }
 
+/** Below this the radius is not worth a rounded mesh; build a true box. */
+const SHARP = 0.0015;
+
 /**
- * Bars are unit-height and scaled on Y at draw time, so a large corner radius
- * would stretch into a visible ellipse as the bar grows. A tight radius keeps
- * the silhouette crisp and sidesteps that entirely — two segments is enough to
- * carry a highlight along the edge without rounding it off.
+ * Bars are square-edged by default: plain `BoxGeometry`, hard 90-degree
+ * corners, per-face normals. That also sidesteps a wrinkle of the rest of the
+ * rig — bars are unit-height and scaled on Y at draw time, so any corner
+ * radius would stretch into an ellipse as a bar grows. A true box has nothing
+ * to stretch.
+ *
+ * The dev sheet can still dial a radius in, which switches to a rounded mesh.
  */
 export function makeBarGeometries(bevel: number): BarGeometries {
-  const radius = THREE.MathUtils.clamp(bevel, 0.002, Math.min(BAR_WIDTH, BAR_DEPTH) / 2 - 0.01);
+  const maxRadius = Math.min(BAR_WIDTH, BAR_DEPTH) / 2 - 0.01;
+  const radius = THREE.MathUtils.clamp(bevel, 0, maxRadius);
+
+  if (radius < SHARP) {
+    return {
+      shell: baseAnchored(new THREE.BoxGeometry(BAR_WIDTH, 1, BAR_DEPTH)),
+      core: baseAnchored(
+        new THREE.BoxGeometry(BAR_WIDTH * CORE_INSET, 1, BAR_DEPTH * CORE_INSET),
+      ),
+      cap: new THREE.BoxGeometry(BAR_WIDTH * 0.84, 0.05, BAR_DEPTH * 0.84),
+    };
+  }
+
   const segments = radius > 0.05 ? 4 : 2;
   return {
     shell: baseAnchored(new RoundedBoxGeometry(BAR_WIDTH, 1, BAR_DEPTH, segments, radius)),

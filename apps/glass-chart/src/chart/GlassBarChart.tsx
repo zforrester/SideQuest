@@ -89,6 +89,8 @@ export function GlassBarChart({
               rimPower={dev.rimPower}
               lightFollow={dev.lightFollow}
               causticIntensity={dev.caustics ? dev.causticIntensity : 0}
+              dispersion={dev.edgeHighlight ? dev.dispersion : 0}
+              frost={dev.frost}
             />
           </group>
         ))}

@@ -30,11 +30,17 @@ at it. The app has no native custom code, so it runs in Expo Go.
 | Bar | Finish | How it's built |
 | --- | --- | --- |
 | Apr | Chalk ceramic | Matte, near-zero specular, procedural roughness for unglazed bisque |
-| May | Seafoam plastic | Soft body under a hard clearcoat — injection-moulded |
-| Jun | Frosted quartz | Translucent shell, high roughness, milky core |
-| Jul | Olive glass | Translucent shell, mirror-smooth, tinted core for density |
+| May | Seafoam plastic | Soft lime-green body under a hard clearcoat — injection-moulded |
+| Jun | Frosted quartz | Translucent shell, etched surface, milky core |
+| Jul | Olive glass | Translucent shell, near mirror-smooth, tinted core for density |
 | Aug | Brushed nickel | Full metal, anisotropic, stretched-noise grain map |
 | Sep | Dusted titanium | Metal scattered wide by a powder coat, fine speckle map |
+
+Bars are square-edged: plain `BoxGeometry`, hard 90-degree corners, per-face
+normals. That also sidesteps a wrinkle of the rest of the rig — bars are
+unit-height and scaled on Y at draw time, so any corner radius would stretch
+into an ellipse as a bar grows, and a true box has nothing to stretch. The dev
+sheet can dial a radius back in, which switches to a rounded mesh.
 
 Opaque finishes are one mesh. Translucent ones are drawn as a back-face pass
 and a front-face pass over the same geometry, plus an inner core so the glass
@@ -93,8 +99,29 @@ centre-weighted pool puts all its light exactly where it cannot be seen. A
 second mask measured on the un-offset UV keeps filaments from hanging over the
 edge of the slab as the pool slides.
 
-The key light swings with the same aim, so highlights, caustics and the
-specular all move together.
+**Dispersion and frosting** are on the glass only — chromatic fringing along a
+metal edge is not a thing that happens.
+
+three's own `dispersion` property only takes effect inside the transmission
+path, which needs the render target this app avoids on mobile, so the split is
+done in the same rim injection. Square-edged bars have one normal per face, so
+there is no geometric gradient at a corner for a classic edge fringe to sit
+on; keying the separation to the view angle instead puts it across the face,
+where a flat pane of glass shows it anyway. The spectrum is pulled back
+towards white before it is mixed in — at full saturation it stops reading as a
+sheen on olive glass and starts reading as blue glass.
+
+The frosting is a noise roughness map plus a normal map derived from the same
+height field (`textures.ts`), so it bends light rather than only dulling it; a
+roughness map alone flattens the surface instead of scattering across it. It
+also breaks the dispersion up into speckle on the etched finishes. three
+perturbs normals from screen-space derivatives when a mesh has no tangents, so
+a plain box needs no extra attributes.
+
+The key light swings with the same aim, so highlights, caustics, dispersion
+and the specular all move together.
+
+![frosting and dispersion on the two glass finishes](docs/glass-detail.png)
 
 ## Building in
 

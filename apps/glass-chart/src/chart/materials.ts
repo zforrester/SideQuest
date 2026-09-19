@@ -1,6 +1,12 @@
 import * as THREE from 'three';
 
-import { brushedRoughness, ceramicRoughness, dustedRoughness } from './textures';
+import {
+  brushedRoughness,
+  ceramicRoughness,
+  dustedRoughness,
+  frostNormal,
+  frostRoughness,
+} from './textures';
 
 /**
  * The material library. Each bar in the row wears a different one, so the
@@ -29,6 +35,14 @@ export type MaterialSpec = {
   /** Whether the swatch needs dark or light text on top of it. */
   swatchInk: 'dark' | 'light';
   kind: 'solid' | 'translucent';
+  /**
+   * How much this finish splits light into a spectrum along its edges.
+   * Zero for anything opaque — chromatic fringing on a metal edge is not a
+   * thing that happens.
+   */
+  dispersion?: number;
+  /** Depth of the etched surface wobble, scaling the frost normal map. */
+  frost?: number;
   /** Props for the single opaque mesh, or for the glass shell. */
   surface: THREE.MeshPhysicalMaterialParameters;
   /** Back-face pass, translucent materials only. */
@@ -63,18 +77,18 @@ export function materialLibrary(): Record<MaterialId, MaterialSpec> {
     seafoam: {
       id: 'seafoam',
       name: 'Seafoam plastic',
-      swatch: '#93c5b2',
+      swatch: '#a9cc89',
       swatchInk: 'dark',
       kind: 'solid',
       surface: {
-        color: '#8cc4b0',
+        color: '#a4c983',
         roughness: 0.34,
         metalness: 0,
         // Injection-moulded plastic: a hard clearcoat over a soft body.
         clearcoat: 1,
         clearcoatRoughness: 0.06,
         sheen: 0.22,
-        sheenColor: new THREE.Color('#dffaf0'),
+        sheenColor: new THREE.Color('#f2fadf'),
         sheenRoughness: 0.5,
         envMapIntensity: 1,
       },
@@ -86,6 +100,8 @@ export function materialLibrary(): Record<MaterialId, MaterialSpec> {
       swatch: '#e9eae4',
       swatchInk: 'dark',
       kind: 'translucent',
+      dispersion: 0.6,
+      frost: 0.6,
       surface: {
         color: '#f2f3ed',
         roughness: 0.42,
@@ -97,6 +113,10 @@ export function materialLibrary(): Record<MaterialId, MaterialSpec> {
         clearcoat: 0.45,
         clearcoatRoughness: 0.4,
         envMapIntensity: 1.1,
+        roughnessMap: frostRoughness(),
+        normalMap: frostNormal(),
+        iridescence: 0.25,
+        iridescenceIOR: 1.25,
       },
       backface: {
         color: '#e6e8e0',
@@ -105,6 +125,8 @@ export function materialLibrary(): Record<MaterialId, MaterialSpec> {
         opacity: 0.26,
         depthWrite: false,
         envMapIntensity: 0.9,
+        roughnessMap: frostRoughness(),
+        normalMap: frostNormal(),
       },
       core: {
         color: '#f6f7f2',
@@ -122,6 +144,8 @@ export function materialLibrary(): Record<MaterialId, MaterialSpec> {
       swatch: '#8c9164',
       swatchInk: 'light',
       kind: 'translucent',
+      dispersion: 0.8,
+      frost: 0.3,
       surface: {
         color: '#9aa06d',
         roughness: 0.03,
@@ -134,6 +158,10 @@ export function materialLibrary(): Record<MaterialId, MaterialSpec> {
         clearcoatRoughness: 0.02,
         specularIntensity: 1,
         envMapIntensity: 1.7,
+        roughnessMap: frostRoughness(),
+        normalMap: frostNormal(),
+        iridescence: 0.4,
+        iridescenceIOR: 1.3,
       },
       backface: {
         color: '#6f7548',
@@ -142,6 +170,7 @@ export function materialLibrary(): Record<MaterialId, MaterialSpec> {
         opacity: 0.3,
         depthWrite: false,
         envMapIntensity: 1.4,
+        normalMap: frostNormal(),
       },
       core: {
         color: '#7e8455',

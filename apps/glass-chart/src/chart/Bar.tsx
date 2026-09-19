@@ -25,6 +25,8 @@ type BarProps = {
   rimPower: number;
   lightFollow: number;
   causticIntensity: number;
+  dispersion: number;
+  frost: number;
 };
 
 const LIFT = 0.26;
@@ -43,6 +45,8 @@ export function Bar({
   rimPower,
   lightFollow,
   causticIntensity,
+  dispersion,
+  frost,
 }: BarProps) {
   const root = useRef<THREE.Group>(null);
   const column = useRef<THREE.Group>(null);
@@ -175,16 +179,24 @@ export function Bar({
       materials.core.opacity = baseOpacity.core * state.presence;
     }
 
+    // Frosting depth is a live control, so the normal scale is set per frame
+    // rather than baked into the material.
+    const depth = (material.frost ?? 0) * frost;
+    if (materials.surface.normalMap) materials.surface.normalScale.set(depth, depth);
+    if (materials.backface?.normalMap) materials.backface.normalScale.set(depth, depth);
+
     const glowLift = 1 + state.glow * 0.45;
     materials.surface.envMapIntensity = (material.surface.envMapIntensity ?? 1) * glowLift;
 
     // Edge highlights track the pointer or the device tilt.
     const direction = aimDirection(6, delta, lightFollow);
     const strength = rimStrength * state.presence * revealed * (1 + state.glow * 0.8);
+    const split = (material.dispersion ?? 0) * dispersion;
     for (const rim of rims) {
       rim.uRimDir.value.copy(direction);
       rim.uRimStrength.value = strength;
       rim.uRimPower.value = rimPower;
+      rim.uDispersion.value = split;
     }
 
     // Keep the tap target the size of the bar, plus a little headroom so a
