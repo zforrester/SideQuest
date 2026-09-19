@@ -1,32 +1,35 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { FINISHES, UI, type Finish } from '../theme';
+import { LIGHTING, UI, type Lighting } from '../theme';
 
 type Props = {
-  value: Finish;
-  onChange: (finish: Finish) => void;
+  value: Lighting;
+  onChange: (lighting: Lighting) => void;
 };
 
-/** Segmented control over the three material treatments. */
-export function FinishPicker({ value, onChange }: Props) {
+/**
+ * Swaps the reflection probe. Materials are mostly reflection, so this
+ * changes the read of every bar at once — the metals most of all.
+ */
+export function LightingPicker({ value, onChange }: Props) {
   return (
     <View style={styles.track} accessibilityRole="tablist">
-      {FINISHES.map((finish) => {
-        const active = finish.id === value;
+      {LIGHTING.map((preset) => {
+        const active = preset.id === value;
         return (
           <Pressable
-            key={finish.id}
+            key={preset.id}
             accessibilityRole="tab"
             accessibilityState={{ selected: active }}
-            accessibilityHint={finish.blurb}
-            onPress={() => onChange(finish.id)}
+            accessibilityHint={preset.blurb}
+            onPress={() => onChange(preset.id)}
             style={({ pressed }) => [
               styles.segment,
               active && styles.segmentActive,
               pressed && !active && styles.pressed,
             ]}
           >
-            <Text style={[styles.label, active && styles.labelActive]}>{finish.label}</Text>
+            <Text style={[styles.label, active && styles.labelActive]}>{preset.label}</Text>
           </Pressable>
         );
       })}
@@ -40,7 +43,7 @@ const styles = StyleSheet.create({
     padding: 4,
     borderRadius: 999,
     gap: 4,
-    backgroundColor: 'rgba(8, 10, 24, 0.55)',
+    backgroundColor: 'rgba(255, 255, 255, 0.55)',
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: UI.hairline,
   },
@@ -51,18 +54,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   segmentActive: {
-    backgroundColor: 'rgba(255, 255, 255, 0.16)',
+    backgroundColor: '#ffffff',
   },
   pressed: {
-    opacity: 0.55,
+    opacity: 0.5,
   },
   label: {
     color: UI.textDim,
     fontSize: 13,
-    fontWeight: '600',
-    letterSpacing: 0.2,
+    fontWeight: '500',
+    letterSpacing: 0.1,
   },
   labelActive: {
     color: UI.text,
+    fontWeight: '600',
   },
 });

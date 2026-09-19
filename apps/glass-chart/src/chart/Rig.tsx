@@ -6,7 +6,7 @@ import { clamp, damp } from './anim';
 import { MAX_BAR_HEIGHT, PLATE_THICKNESS, plateDepth, plateWidth } from './geometry';
 
 export const DEFAULT_YAW = 0.58;
-export const DEFAULT_PITCH = 0.26;
+export const DEFAULT_PITCH = 0.34;
 
 const PITCH_LIMIT: [number, number] = [-0.12, 0.72];
 /** Radians of yaw for a full-width swipe. */

@@ -1,20 +1,19 @@
-import { useCallback, useState } from 'react';
-import { Platform, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useMemo, useState } from 'react';
+import { Platform, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
-import {
-  SafeAreaProvider,
-  useSafeAreaInsets,
-} from 'react-native-safe-area-context';
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { GlassBarChart } from './src/chart/GlassBarChart';
+import { materialLibrary } from './src/chart/materials';
 import { INITIAL_SERIES, shuffleSeries, type Datum } from './src/data';
-import { BACKDROP_GRADIENT, FINISHES, UI, type Finish } from './src/theme';
-import { FinishPicker } from './src/ui/FinishPicker';
+import { BACKDROP_GRADIENT, LIGHTING, UI, type Lighting } from './src/theme';
 import { GhostButton } from './src/ui/GhostButton';
 import { Legend } from './src/ui/Legend';
+import { LightingPicker } from './src/ui/LightingPicker';
 import { Readout } from './src/ui/Readout';
+import { Stat } from './src/ui/Stat';
 
 function tap() {
   // expo-haptics is a no-op target on web; don't even ask.
@@ -24,10 +23,21 @@ function tap() {
 
 function Demo() {
   const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
+  // Three full-size stats need room; below these widths, step down and then
+  // drop the least important one rather than letting the row clip.
+  const compactStats = width < 400;
+  const showThirdStat = width >= 360;
   const [series, setSeries] = useState<Datum[]>(INITIAL_SERIES);
-  const [finish, setFinish] = useState<Finish>('hybrid');
+  const [lighting, setLighting] = useState<Lighting>('studio');
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [revealKey, setRevealKey] = useState(0);
+
+  const library = useMemo(() => materialLibrary(), []);
+  const materials = useMemo(
+    () => series.map((datum) => library[datum.material]),
+    [series, library],
+  );
 
   const handleSelect = useCallback((index: number | null) => {
     setSelectedIndex((current) => {
@@ -48,29 +58,49 @@ function Demo() {
     tap();
   }, []);
 
-  const activeFinish = FINISHES.find((f) => f.id === finish);
+  const total = series.reduce((sum, d) => sum + d.value, 0);
+  const peak = series.reduce((a, b) => (b.value > a.value ? b : a));
+  const average = Math.round(total / series.length);
+  const activeLighting = LIGHTING.find((l) => l.id === lighting);
   const selected = selectedIndex === null ? null : series[selectedIndex];
 
   return (
     <View style={styles.root}>
       <LinearGradient
         colors={BACKDROP_GRADIENT as [string, string, ...string[]]}
-        locations={[0, 0.38, 0.72, 1]}
+        locations={[0, 0.34, 0.7, 1]}
         start={{ x: 0.1, y: 0 }}
         end={{ x: 0.9, y: 1 }}
         style={StyleSheet.absoluteFill}
       />
 
       <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
-        <Text style={styles.eyebrow}>Net revenue · FY26</Text>
-        <Text style={styles.title}>Six months, in glass</Text>
-        <Text style={styles.subtitle}>{activeFinish?.blurb}</Text>
+        <View style={styles.statRow}>
+          <Stat
+            label="Net revenue"
+            value={`$${total.toLocaleString('en-US')}`}
+            unit="k"
+            compact={compactStats}
+          />
+          <Stat
+            label="Peak month"
+            value={peak.label}
+            unit={`$${peak.value}k`}
+            compact={compactStats}
+          />
+          {showThirdStat && (
+            <Stat label="Monthly average" value={`${average}`} unit="k" compact={compactStats} />
+          )}
+        </View>
+        <Text style={styles.caption}>
+          Six finishes · {activeLighting?.blurb}
+        </Text>
       </View>
 
       <View style={styles.canvas}>
         <GlassBarChart
           series={series}
-          finish={finish}
+          lighting={lighting}
           selectedIndex={selectedIndex}
           onSelect={handleSelect}
           revealKey={revealKey}
@@ -78,9 +108,18 @@ function Demo() {
       </View>
 
       <View style={[styles.controls, { paddingBottom: insets.bottom + 16 }]}>
-        <Legend series={series} selectedIndex={selectedIndex} onSelect={handleSelect} />
-        <Readout series={series} selected={selected} />
-        <FinishPicker value={finish} onChange={setFinish} />
+        <Legend
+          series={series}
+          materials={materials}
+          selectedIndex={selectedIndex}
+          onSelect={handleSelect}
+        />
+        <Readout
+          series={series}
+          selected={selected}
+          material={selectedIndex === null ? null : materials[selectedIndex]}
+        />
+        <LightingPicker value={lighting} onChange={setLighting} />
         <View style={styles.buttonRow}>
           <GhostButton
             label="Shuffle data"
@@ -88,6 +127,7 @@ function Demo() {
             onPress={handleShuffle}
           />
           <GhostButton
+            primary
             label="Replay build"
             accessibilityHint="Replays the grow-in animation"
             onPress={handleReplay}
@@ -95,7 +135,7 @@ function Demo() {
         </View>
       </View>
 
-      <StatusBar style="light" />
+      <StatusBar style="dark" />
     </View>
   );
 }
@@ -111,30 +151,21 @@ export default function App() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#05060e',
+    backgroundColor: '#f1f2ed',
   },
   header: {
-    paddingHorizontal: 22,
-    paddingBottom: 4,
+    paddingHorizontal: 20,
+    paddingBottom: 2,
   },
-  eyebrow: {
+  statRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  caption: {
     color: UI.textFaint,
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 1.4,
-    textTransform: 'uppercase',
-  },
-  title: {
-    color: UI.text,
-    fontSize: 26,
-    fontWeight: '700',
-    letterSpacing: -0.6,
-    marginTop: 5,
-  },
-  subtitle: {
-    color: UI.textDim,
-    fontSize: 13,
-    marginTop: 4,
+    fontSize: 12,
+    marginTop: 8,
   },
   canvas: {
     flex: 1,

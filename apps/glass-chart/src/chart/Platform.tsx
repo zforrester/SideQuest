@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 
+import type { MaterialSpec } from './materials';
 import {
   BAR_DEPTH,
   BAR_WIDTH,
@@ -19,7 +20,7 @@ const BLOB_FRAGMENT = `
   void main() {
     float d = length(vUv - vec2(0.5)) * 2.0;
     float a = 1.0 - smoothstep(0.0, 1.0, d);
-    gl_FragColor = vec4(uColor, pow(a, 2.4) * uOpacity);
+    gl_FragColor = vec4(uColor, pow(a, 1.3) * uOpacity);
   }
 `;
 
@@ -32,24 +33,25 @@ const BLOB_VERTEX = `
 `;
 
 function useBlobMaterial(color: string, opacity: number) {
-  return useMemo(() => {
-    const material = new THREE.ShaderMaterial({
-      vertexShader: BLOB_VERTEX,
-      fragmentShader: BLOB_FRAGMENT,
-      uniforms: {
-        uColor: { value: new THREE.Color(color) },
-        uOpacity: { value: opacity },
-      },
-      transparent: true,
-      depthWrite: false,
-      toneMapped: false,
-    });
-    return material;
-  }, [color, opacity]);
+  return useMemo(
+    () =>
+      new THREE.ShaderMaterial({
+        vertexShader: BLOB_VERTEX,
+        fragmentShader: BLOB_FRAGMENT,
+        uniforms: {
+          uColor: { value: new THREE.Color(color) },
+          uOpacity: { value: opacity },
+        },
+        transparent: true,
+        depthWrite: false,
+        toneMapped: false,
+      }),
+    [color, opacity],
+  );
 }
 
-export function Platform({ colors }: { colors: readonly string[] }) {
-  const count = colors.length;
+export function Platform({ materials }: { materials: MaterialSpec[] }) {
+  const count = materials.length;
   const width = plateWidth(count);
   const depth = plateDepth();
 
@@ -59,65 +61,63 @@ export function Platform({ colors }: { colors: readonly string[] }) {
   );
 
   const footprintGeometry = useMemo(
-    () => new RoundedBoxGeometry(BAR_WIDTH * 1.18, 0.012, BAR_DEPTH * 1.18, 3, 0.03),
+    () => new RoundedBoxGeometry(BAR_WIDTH * 1.2, 0.05, BAR_DEPTH * 1.2, 3, 0.014),
     [],
   );
 
-  const shadow = useBlobMaterial('#03040c', 0.85);
-  const bloom = useBlobMaterial('#5f7cff', 0.1);
+  // Warm grey rather than black: a near-black shadow on an off-white set
+  // reads as a hole punched in the slab.
+  // With no shadow pass, these blobs are the grounding. The key sits up and
+  // to the right, so they are offset and stretched to the left to read as a
+  // cast shadow rather than a symmetrical smudge.
+  const shadow = useBlobMaterial('#464a41', 0.72);
 
   return (
     <group>
-      {/* Frosted slab the row stands on. Drawn before the bars so the glass
-          in front of it blends over it rather than the other way round. */}
-      <mesh geometry={plateGeometry} position={[0, -PLATE_THICKNESS / 2, 0]} renderOrder={-3}>
+      {/* Pale frosted slab the row stands on. Drawn before the bars so the
+          glass in front of it blends over it rather than the reverse. */}
+      <mesh
+        geometry={plateGeometry}
+        position={[0, -PLATE_THICKNESS / 2, 0]}
+        renderOrder={-3}
+      >
         <meshPhysicalMaterial
-          color="#141a33"
-          transparent
-          opacity={0.72}
-          depthWrite={false}
-          roughness={0.22}
-          metalness={0.1}
-          clearcoat={1}
-          clearcoatRoughness={0.18}
-          envMapIntensity={1.6}
+          // Opaque and a shade darker than the page, so the row reads as
+          // standing on something rather than floating on white.
+          color="#b7b9ad"
+          roughness={0.46}
+          metalness={0}
+          clearcoat={0.3}
+          clearcoatRoughness={0.4}
+          envMapIntensity={0.65}
         />
       </mesh>
 
-      {/* Wide pool of light under the whole rig. */}
-      <mesh
-        position={[0, -PLATE_THICKNESS - 0.001, 0]}
-        rotation={[-Math.PI / 2, 0, 0]}
-        renderOrder={-2}
-      >
-        <planeGeometry args={[width * 2.1, depth * 5]} />
-        <primitive object={bloom} attach="material" />
-      </mesh>
-
-      {colors.map((color, index) => {
-        const x = barOffsetX(index, count);
-        return (
-          <group key={index} position={[x, 0, 0]}>
-            {/* Contact shadow. */}
-            <mesh position={[0, 0.004, 0.02]} rotation={[-Math.PI / 2, 0, 0]} renderOrder={-2}>
-              <planeGeometry args={[BAR_WIDTH * 3.2, BAR_DEPTH * 3.2]} />
-              <primitive object={shadow} attach="material" />
-            </mesh>
-            {/* Colour footprint, ties each bar to its slot on the plate. */}
-            <mesh geometry={footprintGeometry} position={[0, 0.008, 0]} renderOrder={-1}>
-              <meshStandardMaterial
-                color="#0b0e1c"
-                emissive={color}
-                emissiveIntensity={0.85}
-                roughness={0.5}
-                transparent
-                opacity={0.55}
-                depthWrite={false}
-              />
-            </mesh>
-          </group>
-        );
-      })}
+      {materials.map((material, index) => (
+        <group key={index} position={[barOffsetX(index, count), 0, 0]}>
+          {/* Contact shadow. */}
+          <mesh
+            position={[-0.07, 0.014, 0.05]}
+            rotation={[-Math.PI / 2, 0, 0]}
+            scale={[1.5, 1, 1]}
+            material={shadow}
+            renderOrder={-2}
+          >
+            <planeGeometry args={[BAR_WIDTH * 2.2, BAR_DEPTH * 2.2]} />
+          </mesh>
+          {/* A swatch of the bar's own stock, inlaid in the slab. */}
+          <mesh geometry={footprintGeometry} position={[0, 0.03, 0]} renderOrder={-1}>
+            <meshStandardMaterial
+              color={material.swatch}
+              roughness={0.55}
+              metalness={material.surface.metalness ?? 0}
+              transparent
+              opacity={0.5}
+              depthWrite={false}
+            />
+          </mesh>
+        </group>
+      ))}
     </group>
   );
 }

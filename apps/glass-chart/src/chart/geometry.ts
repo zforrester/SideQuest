@@ -4,13 +4,13 @@ import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.j
 export const BAR_WIDTH = 0.62;
 export const BAR_DEPTH = 0.62;
 export const BAR_GAP = 0.3;
-export const MAX_BAR_HEIGHT = 4.6;
+export const MAX_BAR_HEIGHT = 5.4;
 
 /** Inset of the plastic core inside the glass shell, as a fraction of the bar. */
 export const CORE_INSET = 0.58;
 
 export const PLATE_THICKNESS = 0.16;
-export const PLATE_PAD = 0.5;
+export const PLATE_PAD = 0.42;
 
 function baseAnchored(geometry: THREE.BufferGeometry) {
   // Shift so y=0 is the foot of the bar; scaling y then grows it upwards.

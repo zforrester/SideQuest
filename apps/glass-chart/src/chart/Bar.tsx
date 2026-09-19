@@ -1,10 +1,10 @@
-import { useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
 import type { Datum } from '../data';
-import type { Finish } from '../theme';
 import { Spring, damp } from './anim';
+import type { MaterialSpec } from './materials';
 import {
   BAR_WIDTH,
   MAX_BAR_HEIGHT,
@@ -16,8 +16,8 @@ import {
 type BarProps = {
   index: number;
   datum: Datum;
+  material: MaterialSpec;
   maxValue: number;
-  finish: Finish;
   selected: boolean;
   dimmed: boolean;
   /** Staggers the grow-in so the row builds left to right. */
@@ -25,14 +25,12 @@ type BarProps = {
 };
 
 const LIFT = 0.26;
-const SHELL_BACK_OPACITY = 0.16;
-const SHELL_FRONT_OPACITY = 0.34;
 
 export function Bar({
   index,
   datum,
+  material,
   maxValue,
-  finish,
   selected,
   dimmed,
   revealDelay,
@@ -41,13 +39,50 @@ export function Bar({
   const column = useRef<THREE.Group>(null);
   const cap = useRef<THREE.Mesh>(null);
   const hit = useRef<THREE.Mesh>(null);
-  const capMaterial = useRef<THREE.MeshStandardMaterial>(null);
-  const innerLight = useRef<THREE.PointLight>(null);
-  const shellBack = useRef<THREE.MeshPhysicalMaterial>(null);
-  const shellFront = useRef<THREE.MeshPhysicalMaterial>(null);
-  const coreMaterial = useRef<THREE.MeshPhysicalMaterial>(null);
+  const capMaterial = useRef<THREE.MeshPhysicalMaterial>(null);
 
-  const color = useMemo(() => new THREE.Color(datum.color), [datum.color]);
+  const translucent = material.kind === 'translucent';
+
+  /**
+   * Built imperatively rather than as JSX so each bar can take an arbitrary
+   * bag of material parameters from the library without a prop per feature.
+   */
+  const materials = useMemo(() => {
+    const surface = new THREE.MeshPhysicalMaterial(material.surface);
+    const backface = material.backface
+      ? new THREE.MeshPhysicalMaterial({ ...material.backface, side: THREE.BackSide })
+      : null;
+    const core = material.core ? new THREE.MeshPhysicalMaterial(material.core) : null;
+    return { surface, backface, core };
+  }, [material]);
+
+  // Base opacities, so the dim/glow animation has something to scale against.
+  const baseOpacity = useMemo(
+    () => ({
+      surface: materials.surface.transparent ? materials.surface.opacity : 1,
+      backface: materials.backface?.opacity ?? 1,
+      core: materials.core?.opacity ?? 1,
+    }),
+    [materials],
+  );
+
+  const capColor = useMemo(() => {
+    const base = new THREE.Color(
+      (material.surface.color as THREE.ColorRepresentation) ?? '#ffffff',
+    );
+    // A shade of the bar's own colour, so the cap reads as the same stock.
+    return base.clone().lerp(new THREE.Color('#ffffff'), translucent ? 0.35 : 0.12);
+  }, [material, translucent]);
+
+  // These are created outside the reconciler, so they are ours to clean up.
+  useEffect(
+    () => () => {
+      materials.surface.dispose();
+      materials.backface?.dispose();
+      materials.core?.dispose();
+    },
+    [materials],
+  );
 
   const state = useRef({
     elapsed: 0,
@@ -56,12 +91,6 @@ export function Bar({
     glow: 0,
     presence: 1,
   }).current;
-
-  const showShell = finish !== 'plastic';
-  const showCore = finish !== 'glass';
-  // With no shell around it, the plastic bar is the whole bar: full width and
-  // full height, so the cap still lands flush on top of it.
-  const solidCore = finish === 'plastic';
 
   useFrame((_, delta) => {
     state.elapsed += delta;
@@ -73,7 +102,7 @@ export function Bar({
 
     state.lift = damp(state.lift, selected ? 1 : 0, 9, delta);
     state.glow = damp(state.glow, selected ? 1 : 0, 7, delta);
-    state.presence = damp(state.presence, dimmed ? 0.45 : 1, 8, delta);
+    state.presence = damp(state.presence, dimmed ? 0.55 : 1, 8, delta);
 
     if (root.current) {
       root.current.position.y = state.lift * LIFT;
@@ -92,29 +121,22 @@ export function Bar({
     }
 
     if (capMaterial.current) {
-      capMaterial.current.emissiveIntensity = (2.1 + state.glow * 3.6) * (0.4 + 0.6 * state.presence);
-      capMaterial.current.opacity = state.presence;
+      capMaterial.current.opacity = 0.35 + 0.65 * state.presence;
     }
 
-    if (innerLight.current) {
-      innerLight.current.position.y = height * 0.55;
-      innerLight.current.intensity = 0.5 + state.glow * 16;
+    // On a light backdrop a bar recedes by going translucent and flat, not by
+    // going dark, so the dim state fades opacity and reflection together.
+    materials.surface.opacity = baseOpacity.surface * (0.45 + 0.55 * state.presence);
+    materials.surface.transparent = materials.surface.opacity < 0.999;
+    if (materials.backface) {
+      materials.backface.opacity = baseOpacity.backface * state.presence;
+    }
+    if (materials.core) {
+      materials.core.opacity = baseOpacity.core * state.presence;
     }
 
-    if (shellBack.current) {
-      shellBack.current.opacity = SHELL_BACK_OPACITY * state.presence * (1 + state.glow * 0.6);
-      shellBack.current.envMapIntensity = 2.1 + state.glow * 1.4;
-    }
-
-    if (shellFront.current) {
-      shellFront.current.opacity = SHELL_FRONT_OPACITY * state.presence * (1 + state.glow * 0.5);
-      shellFront.current.envMapIntensity = 2.1 + state.glow * 1.4;
-    }
-
-    if (coreMaterial.current) {
-      coreMaterial.current.emissiveIntensity = 0.18 + state.glow * 0.8;
-      if (coreMaterial.current.transparent) coreMaterial.current.opacity = 0.9 * state.presence;
-    }
+    const lift = 1 + state.glow * 0.45;
+    materials.surface.envMapIntensity = (material.surface.envMapIntensity ?? 1) * lift;
 
     // Keep the tap target the size of the bar, plus a little headroom so a
     // short bar is still comfortable to hit with a thumb.
@@ -129,89 +151,36 @@ export function Bar({
     <group ref={root} userData={{ barIndex: index }}>
       <group ref={column}>
         {/* Back faces first: three sorts transparent objects far-to-near and
-            breaks the tie between these two by creation order, which gives a
+            breaks the tie between the passes by creation order, which gives a
             correct read through the glass without juggling renderOrder. */}
-        {showShell && (
-          <mesh geometry={shellGeometry}>
-            <meshPhysicalMaterial
-              ref={shellBack}
-              color={color}
-              side={THREE.BackSide}
-              transparent
-              opacity={SHELL_BACK_OPACITY}
-              depthWrite={false}
-              roughness={0.06}
-              metalness={0}
-              ior={1.5}
-              clearcoat={1}
-              clearcoatRoughness={0.04}
-              envMapIntensity={2.1}
-            />
-          </mesh>
+        {materials.backface && (
+          <mesh geometry={shellGeometry} material={materials.backface} />
         )}
 
-        {showCore && (
+        {materials.core && (
           <mesh
-            geometry={solidCore ? shellGeometry : coreGeometry}
-            position={solidCore ? [0, 0, 0] : [0, 0.02, 0]}
-            scale={solidCore ? [1, 1, 1] : [1, 0.955, 1]}
-          >
-            <meshPhysicalMaterial
-              ref={coreMaterial}
-              color={color}
-              emissive={color}
-              emissiveIntensity={0.18}
-              roughness={solidCore ? 0.26 : 0.34}
-              metalness={0}
-              clearcoat={1}
-              clearcoatRoughness={0.1}
-              sheen={0.18}
-              sheenColor={color}
-              sheenRoughness={0.45}
-              envMapIntensity={1.15}
-              transparent={!solidCore}
-              opacity={solidCore ? 1 : 0.9}
-            />
-          </mesh>
+            geometry={coreGeometry}
+            material={materials.core}
+            position={[0, 0.02, 0]}
+            scale={[1, 0.955, 1]}
+          />
         )}
 
-        {showShell && (
-          <mesh geometry={shellGeometry}>
-            <meshPhysicalMaterial
-              ref={shellFront}
-              color={color}
-              side={THREE.FrontSide}
-              transparent
-              opacity={SHELL_FRONT_OPACITY}
-              depthWrite={false}
-              roughness={0.03}
-              metalness={0}
-              ior={1.52}
-              clearcoat={1}
-              clearcoatRoughness={0.02}
-              iridescence={0.45}
-              iridescenceIOR={1.32}
-              specularIntensity={1}
-              envMapIntensity={2.1}
-            />
-          </mesh>
-        )}
+        <mesh geometry={shellGeometry} material={materials.surface} />
       </group>
 
       <mesh ref={cap} geometry={capGeometry}>
-        <meshStandardMaterial
+        <meshPhysicalMaterial
           ref={capMaterial}
-          color="#0a0c18"
-          emissive={color}
-          emissiveIntensity={2.1}
-          roughness={0.3}
-          metalness={0.1}
+          color={capColor}
+          roughness={translucent ? 0.18 : 0.3}
+          metalness={material.surface.metalness ?? 0}
+          clearcoat={0.8}
+          clearcoatRoughness={0.18}
+          envMapIntensity={1.3}
           transparent
         />
       </mesh>
-
-      {/* Inside the bar, so the glass lights up from within on selection. */}
-      <pointLight ref={innerLight} color={color} intensity={0.5} distance={2.6} decay={2} />
 
       {/* Invisible but still raycastable — this is the tap target. */}
       <mesh ref={hit} visible={false}>

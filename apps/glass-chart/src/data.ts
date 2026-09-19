@@ -1,4 +1,4 @@
-import { SERIES_COLORS } from './theme';
+import { MATERIAL_ORDER, type MaterialId } from './chart/materials';
 
 export type Datum = {
   id: string;
@@ -9,7 +9,8 @@ export type Datum = {
   value: number;
   /** Change against the previous period, as a fraction. */
   delta: number;
-  color: string;
+  /** Which finish this bar is cast in. */
+  material: MaterialId;
 };
 
 const LABELS = ['Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'];
@@ -33,7 +34,7 @@ function toSeries(values: number[]): Datum[] {
     caption: CAPTIONS[i],
     value,
     delta: i === 0 ? 0 : (value - values[i - 1]) / values[i - 1],
-    color: SERIES_COLORS[i],
+    material: MATERIAL_ORDER[i % MATERIAL_ORDER.length],
   }));
 }
 

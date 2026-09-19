@@ -9,7 +9,7 @@ type Props = {
   style?: StyleProp<ViewStyle>;
   intensity?: number;
   radius?: number;
-  /** Slightly brighter fill, for the panel that should read as foremost. */
+  padding?: number;
   raised?: boolean;
 };
 
@@ -18,12 +18,19 @@ type Props = {
  * slab. The tint underneath keeps it legible on platforms where the blur is
  * unavailable or disabled.
  */
-export function GlassPanel({ children, style, intensity = 28, radius = 22, raised }: Props) {
+export function GlassPanel({
+  children,
+  style,
+  intensity = 24,
+  radius = 24,
+  padding = 16,
+  raised,
+}: Props) {
   return (
     <View style={[styles.clip, { borderRadius: radius }, style]}>
       <BlurView
         intensity={intensity}
-        tint="dark"
+        tint="light"
         blurMethod="dimezisBlurViewSdk31Plus"
         style={StyleSheet.absoluteFill}
       />
@@ -33,7 +40,7 @@ export function GlassPanel({ children, style, intensity = 28, radius = 22, raise
           { backgroundColor: raised ? UI.panelStrong : UI.panel },
         ]}
       />
-      <View style={styles.content}>{children}</View>
+      <View style={{ padding }}>{children}</View>
     </View>
   );
 }
@@ -43,8 +50,5 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: UI.hairline,
-  },
-  content: {
-    padding: 16,
   },
 });

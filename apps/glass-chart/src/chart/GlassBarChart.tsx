@@ -4,41 +4,45 @@ import * as THREE from 'three';
 
 import type { Datum } from '../data';
 import { MAX_VALUE } from '../data';
-import type { Finish } from '../theme';
+import type { Lighting } from '../theme';
 import { Bar } from './Bar';
 import { Platform } from './Platform';
 import { Rig } from './Rig';
 import { Studio } from './Studio';
 import { barOffsetX } from './geometry';
+import { materialLibrary } from './materials';
 
 type Props = {
   series: Datum[];
-  finish: Finish;
+  lighting: Lighting;
   selectedIndex: number | null;
   onSelect: (index: number | null) => void;
   /** Drives the stagger: bump it to replay the grow-in. */
   revealKey: number;
 };
 
-const IDLE_ACCENT = '#8ea2ff';
-
-export function GlassBarChart({ series, finish, selectedIndex, onSelect, revealKey }: Props) {
-  const colors = useMemo(() => series.map((d) => d.color), [series]);
-  const accent = selectedIndex === null ? IDLE_ACCENT : series[selectedIndex].color;
+export function GlassBarChart({ series, lighting, selectedIndex, onSelect, revealKey }: Props) {
+  const library = useMemo(() => materialLibrary(), []);
+  const materials = useMemo(
+    () => series.map((datum) => library[datum.material]),
+    [series, library],
+  );
 
   return (
     <Canvas
       style={{ flex: 1 }}
       dpr={[1, 2]}
       gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
-      camera={{ position: [0, 1.25, 9], fov: 36, near: 0.1, far: 60 }}
+      // near/far kept tight: a 0.1-60 range spends so much depth precision on
+      // empty space that the contact shadows laid on the slab z-fight away.
+      camera={{ position: [0, 2.6, 8.6], fov: 36, near: 2, far: 40 }}
       onCreated={({ gl }) => {
-        gl.toneMapping = THREE.ACESFilmicToneMapping;
-        gl.toneMappingExposure = 1.08;
+        // Khronos PBR Neutral: holds material colour and doesn't wash the
+        // highlights out on a near-white set the way ACES does.
+        gl.toneMapping = THREE.NeutralToneMapping;
       }}
     >
-      <fogExp2 attach="fog" args={['#05060e', 0.036]} />
-      <Studio accent={accent} />
+      <Studio preset={lighting} />
 
       <Rig
         count={series.length}
@@ -46,15 +50,15 @@ export function GlassBarChart({ series, finish, selectedIndex, onSelect, revealK
         onSelectBar={onSelect}
         onBackgroundPress={() => onSelect(null)}
       >
-        <Platform colors={colors} />
+        <Platform materials={materials} />
         {series.map((datum, index) => (
           <group key={datum.id} position={[barOffsetX(index, series.length), 0, 0]}>
             <Bar
               key={`${datum.id}-${revealKey}`}
               index={index}
               datum={datum}
+              material={materials[index]}
               maxValue={MAX_VALUE}
-              finish={finish}
               selected={selectedIndex === index}
               dimmed={selectedIndex !== null && selectedIndex !== index}
               revealDelay={0.12 + index * 0.075}
