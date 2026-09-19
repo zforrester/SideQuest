@@ -3,6 +3,7 @@ import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 
 import { STUDIO_PRESETS, type Lighting } from '../theme';
+import { aim } from './lightInput';
 
 /**
  * Builds the scene that gets baked into the reflection probe. Everything the
@@ -57,7 +58,15 @@ function createEmitterScene(preset: Lighting) {
   return scene;
 }
 
-export function Studio({ preset }: { preset: Lighting }) {
+type StudioProps = {
+  preset: Lighting;
+  /** Dev-sheet multiplier on the preset's own exposure. */
+  exposure: number;
+  /** How far the pointer or device tilt swings the key. */
+  lightFollow: number;
+};
+
+export function Studio({ preset, exposure, lightFollow }: StudioProps) {
   const renderer = useThree((state) => state.gl);
   const scene = useThree((state) => state.scene);
   const config = STUDIO_PRESETS[preset];
@@ -94,17 +103,28 @@ export function Studio({ preset }: { preset: Lighting }) {
   }, [probe, scene]);
 
   useEffect(() => {
-    renderer.toneMappingExposure = config.exposure;
-  }, [renderer, config.exposure]);
+    renderer.toneMappingExposure = config.exposure * exposure;
+  }, [renderer, config.exposure, exposure]);
 
   const keyLight = useRef<THREE.DirectionalLight>(null);
   const travelling = useRef<THREE.PointLight>(null);
 
-  // A light that crawls around the row, so highlights keep moving across the
-  // metal and glass even while the chart is sitting still.
-  useFrame((state) => {
+  // The key swings with the pointer or the device tilt, and a second light
+  // crawls the row on its own so highlights keep moving even when nothing is
+  // touching the screen.
+  useFrame((state, delta) => {
     const t = state.clock.elapsedTime;
-    travelling.current?.position.set(Math.cos(t * 0.3) * 6, 3.2, Math.sin(t * 0.3) * 6);
+    const a = aim(6, delta);
+    keyLight.current?.position.set(
+      4.5 + a.x * 7 * lightFollow,
+      8.5 + a.y * 3.5 * lightFollow,
+      5 - a.y * 2 * lightFollow,
+    );
+    travelling.current?.position.set(
+      Math.cos(t * 0.3) * 6 + a.x * 2 * lightFollow,
+      3.2,
+      Math.sin(t * 0.3) * 6,
+    );
   });
 
   return (

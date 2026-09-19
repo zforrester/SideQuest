@@ -1,12 +1,10 @@
-import { useMemo, useRef, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, type ReactNode } from 'react';
 import { useFrame, useThree, type ThreeEvent } from '@react-three/fiber';
 import * as THREE from 'three';
 
 import { clamp, damp } from './anim';
+import { lightInput } from './lightInput';
 import { MAX_BAR_HEIGHT, PLATE_THICKNESS, plateDepth, plateWidth } from './geometry';
-
-export const DEFAULT_YAW = 0.58;
-export const DEFAULT_PITCH = 0.34;
 
 const PITCH_LIMIT: [number, number] = [-0.12, 0.72];
 /** Radians of yaw for a full-width swipe. */
@@ -22,9 +20,9 @@ const SWAY_RATE = 0.3;
 /** Height the rig is dropped by, so it turns about its middle. */
 const PIVOT_HEIGHT = MAX_BAR_HEIGHT * 0.45;
 
-/** Fraction of the canvas the chart is allowed to fill. */
-const FILL_X = 0.94;
-const FILL_Y = 0.9;
+/** Height of the canvas the chart is allowed to fill, relative to the width
+ *  budget the dev sheet sets. */
+const FILL_Y_RATIO = 0.96;
 /** Framing error (in NDC) small enough to ignore, so the rig can settle. */
 const FRAME_DEADBAND = 0.005;
 
@@ -34,6 +32,10 @@ type RigProps = {
   onSelectBar: (index: number) => void;
   onBackgroundPress: () => void;
   autoRotate: boolean;
+  /** Base angles from the dev sheet; dragging moves on from these. */
+  yaw: number;
+  pitch: number;
+  fill: number;
 };
 
 function findBarIndex(object: THREE.Object3D | null): number | null {
@@ -58,17 +60,26 @@ function findBarIndex(object: THREE.Object3D | null): number | null {
  * wider than the far end), and by how much depends on the yaw and the screen,
  * so no fixed scale or offset frames it correctly on every device.
  */
-export function Rig({ count, children, onSelectBar, onBackgroundPress, autoRotate }: RigProps) {
+export function Rig({
+  count,
+  children,
+  onSelectBar,
+  onBackgroundPress,
+  autoRotate,
+  yaw,
+  pitch,
+  fill,
+}: RigProps) {
   const frame = useRef<THREE.Group>(null);
   const group = useRef<THREE.Group>(null);
   const camera = useThree((state) => state.camera);
   const viewport = useThree((state) => state.viewport);
 
   const orbit = useRef({
-    yaw: DEFAULT_YAW,
-    pitch: DEFAULT_PITCH,
-    targetYaw: DEFAULT_YAW,
-    targetPitch: DEFAULT_PITCH,
+    yaw,
+    pitch,
+    targetYaw: yaw,
+    targetPitch: pitch,
     velocity: 0,
     idle: 0,
     /** Angle the sway settles around: wherever the user last left it. */
@@ -79,6 +90,15 @@ export function Rig({ count, children, onSelectBar, onBackgroundPress, autoRotat
     offsetX: 0,
     offsetY: 0,
   }).current;
+
+  useEffect(() => {
+    orbit.targetYaw = yaw;
+    orbit.restYaw = null;
+  }, [yaw, orbit]);
+
+  useEffect(() => {
+    orbit.targetPitch = pitch;
+  }, [pitch, orbit]);
 
   const drag = useRef({
     active: false,
@@ -108,7 +128,15 @@ export function Rig({ count, children, onSelectBar, onBackgroundPress, autoRotat
 
   const scratch = useRef(new THREE.Vector3()).current;
 
+  /** Records the pointer for the lighting whether or not a drag is running. */
+  const trackLight = (event: ThreeEvent<PointerEvent>) => {
+    lightInput.pointerX = event.pointer.x;
+    lightInput.pointerY = event.pointer.y;
+    lightInput.pointerSeen = true;
+  };
+
   const beginDrag = (event: ThreeEvent<PointerEvent>) => {
+    trackLight(event);
     event.stopPropagation();
     drag.active = true;
     drag.lastX = event.pointer.x;
@@ -121,6 +149,7 @@ export function Rig({ count, children, onSelectBar, onBackgroundPress, autoRotat
   };
 
   const moveDrag = (event: ThreeEvent<PointerEvent>) => {
+    trackLight(event);
     if (!drag.active) return;
     event.stopPropagation();
     const dx = event.pointer.x - drag.lastX;
@@ -192,7 +221,10 @@ export function Rig({ count, children, onSelectBar, onBackgroundPress, autoRotat
     }
 
     // NDC spans 2 across the canvas, so a full-width box measures 2.
-    const overflow = Math.max((maxX - minX) / (2 * FILL_X), (maxY - minY) / (2 * FILL_Y));
+    const overflow = Math.max(
+      (maxX - minX) / (2 * fill),
+      (maxY - minY) / (2 * fill * FILL_Y_RATIO),
+    );
     if (overflow > 0) {
       orbit.scale = damp(orbit.scale, clamp(orbit.scale / overflow, 0.05, 4), 4, delta);
     }

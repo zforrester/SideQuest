@@ -4,6 +4,7 @@
   "main": "index.ts",
   "dependencies": {
     "@expo/metro-runtime": "~57.0.16",
+    "@react-native-community/slider": "^5.2.0",
     "@react-three/fiber": "^9.7.0",
     "expo": "~57.0.24",
     "expo-asset": "~57.0.18",
@@ -12,6 +13,7 @@
     "expo-gl": "~57.0.2",
     "expo-haptics": "~57.0.3",
     "expo-linear-gradient": "~57.0.2",
+    "expo-sensors": "~57.0.3",
     "expo-status-bar": "~57.0.1",
     "react": "19.2.3",
     "react-dom": "^19.2.3",

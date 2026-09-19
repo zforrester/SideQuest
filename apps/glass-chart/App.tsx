@@ -1,5 +1,12 @@
 import { useCallback, useMemo, useState } from 'react';
-import { Platform, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import {
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+  useWindowDimensions,
+} from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
@@ -8,12 +15,15 @@ import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-cont
 import { GlassBarChart } from './src/chart/GlassBarChart';
 import { materialLibrary } from './src/chart/materials';
 import { INITIAL_SERIES, shuffleSeries, type Datum } from './src/data';
-import { BACKDROP_GRADIENT, LIGHTING, UI, type Lighting } from './src/theme';
+import { DEFAULT_DEV, type DevConfig } from './src/devConfig';
+import { BACKDROP_GRADIENT, INK, LIGHTING, UI, type Lighting } from './src/theme';
+import { DevSheet } from './src/ui/DevSheet';
 import { GhostButton } from './src/ui/GhostButton';
 import { Legend } from './src/ui/Legend';
 import { LightingPicker } from './src/ui/LightingPicker';
 import { Readout } from './src/ui/Readout';
 import { Stat } from './src/ui/Stat';
+import { useTilt } from './src/useTilt';
 
 function tap() {
   // expo-haptics is a no-op target on web; don't even ask.
@@ -32,6 +42,12 @@ function Demo() {
   const [lighting, setLighting] = useState<Lighting>('studio');
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [revealKey, setRevealKey] = useState(0);
+  const [dev, setDev] = useState<DevConfig>(DEFAULT_DEV);
+  const [devOpen, setDevOpen] = useState(false);
+
+  // Feeds device tilt into the light aim; falls back to the pointer where
+  // there is no motion sensor.
+  useTilt();
 
   const library = useMemo(() => materialLibrary(), []);
   const materials = useMemo(
@@ -57,6 +73,12 @@ function Demo() {
     setRevealKey((k) => k + 1);
     tap();
   }, []);
+
+  const patchDev = useCallback((patch: Partial<DevConfig>) => {
+    setDev((current) => ({ ...current, ...patch }));
+  }, []);
+
+  const resetDev = useCallback(() => setDev(DEFAULT_DEV), []);
 
   const total = series.reduce((sum, d) => sum + d.value, 0);
   const peak = series.reduce((a, b) => (b.value > a.value ? b : a));
@@ -92,9 +114,24 @@ function Demo() {
             <Stat label="Monthly average" value={`${average}`} unit="k" compact={compactStats} />
           )}
         </View>
-        <Text style={styles.caption}>
-          Six finishes · {activeLighting?.blurb}
-        </Text>
+        <View style={styles.captionRow}>
+          <Text style={styles.caption} numberOfLines={1}>
+            Six finishes · {activeLighting?.blurb}
+          </Text>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={devOpen ? 'Hide dev controls' : 'Show dev controls'}
+            accessibilityState={{ expanded: devOpen }}
+            onPress={() => setDevOpen((open) => !open)}
+            style={({ pressed }) => [
+              styles.devToggle,
+              devOpen && styles.devToggleOn,
+              pressed && styles.devTogglePressed,
+            ]}
+          >
+            <Text style={[styles.devToggleLabel, devOpen && styles.devToggleLabelOn]}>Dev</Text>
+          </Pressable>
+        </View>
       </View>
 
       <View style={styles.canvas}>
@@ -104,9 +141,20 @@ function Demo() {
           selectedIndex={selectedIndex}
           onSelect={handleSelect}
           revealKey={revealKey}
+          dev={dev}
         />
       </View>
 
+      {devOpen ? (
+        <View style={{ paddingBottom: insets.bottom }}>
+          <DevSheet
+            config={dev}
+            onChange={patchDev}
+            onReset={resetDev}
+            onClose={() => setDevOpen(false)}
+          />
+        </View>
+      ) : (
       <View style={[styles.controls, { paddingBottom: insets.bottom + 16 }]}>
         <Legend
           series={series}
@@ -134,6 +182,7 @@ function Demo() {
           />
         </View>
       </View>
+      )}
 
       <StatusBar style="dark" />
     </View>
@@ -162,10 +211,41 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: 12,
   },
+  captionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 10,
+    marginTop: 8,
+  },
   caption: {
+    flex: 1,
     color: UI.textFaint,
     fontSize: 12,
-    marginTop: 8,
+  },
+  devToggle: {
+    paddingVertical: 5,
+    paddingHorizontal: 12,
+    borderRadius: 999,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: UI.hairline,
+    backgroundColor: 'rgba(255, 255, 255, 0.55)',
+  },
+  devToggleOn: {
+    backgroundColor: INK,
+    borderColor: INK,
+  },
+  devTogglePressed: {
+    opacity: 0.6,
+  },
+  devToggleLabel: {
+    color: UI.textDim,
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 0.6,
+  },
+  devToggleLabelOn: {
+    color: '#f4f5f1',
   },
   canvas: {
     flex: 1,
