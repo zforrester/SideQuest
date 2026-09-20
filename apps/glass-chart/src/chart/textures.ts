@@ -1,37 +1,34 @@
 import * as THREE from 'three';
 
 /**
- * Procedural data maps. Generated in code so the app still ships no image
- * assets — the point of these is micro-variation: a powder coat that is
- * perfectly uniform reads as plastic, and a brushed metal needs its grain.
+ * Procedural surface detail. Generated in code so the app still ships no
+ * image assets.
+ *
+ * These earn their place: a perfectly smooth, perfectly uniform surface is
+ * the clearest tell that something is computer generated. Real materials
+ * vary — a powder coat speckles, brushed metal runs in strands, moulded
+ * plastic has orange peel, bisque is faintly lumpy — and it is that variation
+ * breaking up the highlights that sells them.
  */
 
-function makeRgbTexture(
+function makeTexture(
   size: number,
-  fill: (x: number, y: number) => [number, number, number],
+  data: Uint8Array,
+  repeat: [number, number],
 ) {
-  const data = new Uint8Array(size * size * 4);
-  for (let y = 0; y < size; y++) {
-    for (let x = 0; x < size; x++) {
-      const i = (y * size + x) * 4;
-      const [r, g, b] = fill(x, y);
-      data[i] = Math.max(0, Math.min(255, Math.round(r * 255)));
-      data[i + 1] = Math.max(0, Math.min(255, Math.round(g * 255)));
-      data[i + 2] = Math.max(0, Math.min(255, Math.round(b * 255)));
-      data[i + 3] = 255;
-    }
-  }
   const texture = new THREE.DataTexture(data, size, size);
   texture.wrapS = THREE.RepeatWrapping;
   texture.wrapT = THREE.RepeatWrapping;
   texture.minFilter = THREE.LinearMipmapLinearFilter;
   texture.magFilter = THREE.LinearFilter;
   texture.generateMipmaps = true;
+  texture.anisotropy = 4;
+  texture.repeat.set(repeat[0], repeat[1]);
   texture.needsUpdate = true;
   return texture;
 }
 
-function makeDataTexture(size: number, fill: (x: number, y: number) => number) {
+function grey(size: number, repeat: [number, number], fill: (x: number, y: number) => number) {
   const data = new Uint8Array(size * size * 4);
   for (let y = 0; y < size; y++) {
     for (let x = 0; x < size; x++) {
@@ -43,14 +40,30 @@ function makeDataTexture(size: number, fill: (x: number, y: number) => number) {
       data[i + 3] = 255;
     }
   }
-  const texture = new THREE.DataTexture(data, size, size);
-  texture.wrapS = THREE.RepeatWrapping;
-  texture.wrapT = THREE.RepeatWrapping;
-  texture.minFilter = THREE.LinearMipmapLinearFilter;
-  texture.magFilter = THREE.LinearFilter;
-  texture.generateMipmaps = true;
-  texture.needsUpdate = true;
-  return texture;
+  return makeTexture(size, data, repeat);
+}
+
+/** Tangent-space normals from a height field, by central differences. */
+function normalFromHeight(
+  size: number,
+  repeat: [number, number],
+  strength: number,
+  height: (x: number, y: number) => number,
+) {
+  const data = new Uint8Array(size * size * 4);
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      const i = (y * size + x) * 4;
+      const dx = (height(x + 1, y) - height(x - 1, y)) * strength;
+      const dy = (height(x, y + 1) - height(x, y - 1)) * strength;
+      const len = Math.hypot(dx, dy, 1);
+      data[i] = Math.round(((-dx / len) * 0.5 + 0.5) * 255);
+      data[i + 1] = Math.round(((-dy / len) * 0.5 + 0.5) * 255);
+      data[i + 2] = Math.round(((1 / len) * 0.5 + 0.5) * 255);
+      data[i + 3] = 255;
+    }
+  }
+  return makeTexture(size, data, repeat);
 }
 
 /** Value noise: smoother and less fizzy than raw per-texel random. */
@@ -82,81 +95,116 @@ function valueNoise(size: number, cells: number, seed: number) {
   };
 }
 
-let dusted: THREE.Texture | null = null;
-
-/** Fine speckle for a powder-coated finish. Two octaves, mostly high frequency. */
-export function dustedRoughness() {
-  if (dusted) return dusted;
-  const size = 256;
-  const fine = valueNoise(size, 96, 7);
-  const broad = valueNoise(size, 12, 31);
-  dusted = makeDataTexture(size, (x, y) => 0.62 + fine(x, y) * 0.3 + broad(x, y) * 0.12);
-  dusted.repeat.set(2, 5);
-  return dusted;
+/** Lazily build each map once and hand out the same instance thereafter. */
+function once<T>(build: () => T) {
+  let value: T | null = null;
+  return () => {
+    if (value === null) value = build();
+    return value;
+  };
 }
 
-let bisque: THREE.Texture | null = null;
+const SIZE = 256;
 
-/** Soft, broad undulation for an unglazed ceramic surface. */
-export function ceramicRoughness() {
-  if (bisque) return bisque;
-  const size = 128;
-  const broad = valueNoise(size, 8, 101);
-  const fine = valueNoise(size, 40, 17);
-  bisque = makeDataTexture(size, (x, y) => 0.68 + broad(x, y) * 0.22 + fine(x, y) * 0.08);
-  bisque.repeat.set(1, 3);
-  return bisque;
-}
+// --- powder-coated metal -------------------------------------------------
 
-let brushed: THREE.Texture | null = null;
+export const dustedRoughness = once(() => {
+  const fine = valueNoise(SIZE, 96, 7);
+  const broad = valueNoise(SIZE, 12, 31);
+  return grey(SIZE, [2, 5], (x, y) => 0.62 + fine(x, y) * 0.3 + broad(x, y) * 0.12);
+});
 
-/** Vertical grain for brushed metal: noise stretched along one axis. */
-export function brushedRoughness() {
-  if (brushed) return brushed;
-  const size = 256;
-  const streak = valueNoise(size, 160, 5);
-  const drift = valueNoise(size, 6, 61);
-  // Sampling the same row repeatedly stretches the noise into strands.
-  brushed = makeDataTexture(size, (x, y) => 0.1 + streak(x, y * 0.06) * 0.26 + drift(x, y) * 0.07);
-  brushed.repeat.set(3, 1);
-  return brushed;
-}
+export const dustedNormal = once(() => {
+  const fine = valueNoise(SIZE, 110, 13);
+  return normalFromHeight(SIZE, [2, 5], 1.6, fine);
+});
 
-let frostRough: THREE.Texture | null = null;
+// --- unglazed ceramic ----------------------------------------------------
 
-/** Broad, shallow variation: etched glass is uneven, not grainy. */
-export function frostRoughness() {
-  if (frostRough) return frostRough;
-  const size = 256;
-  const broad = valueNoise(size, 14, 211);
-  const fine = valueNoise(size, 56, 89);
-  frostRough = makeDataTexture(size, (x, y) => 0.24 + broad(x, y) * 0.5 + fine(x, y) * 0.16);
-  frostRough.repeat.set(2, 4);
-  return frostRough;
-}
+export const ceramicRoughness = once(() => {
+  const broad = valueNoise(SIZE, 8, 101);
+  const fine = valueNoise(SIZE, 40, 17);
+  return grey(SIZE, [1, 3], (x, y) => 0.68 + broad(x, y) * 0.22 + fine(x, y) * 0.08);
+});
 
-let frostNorm: THREE.Texture | null = null;
+export const ceramicNormal = once(() => {
+  const broad = valueNoise(SIZE, 10, 103);
+  const fine = valueNoise(SIZE, 44, 19);
+  return normalFromHeight(SIZE, [1, 3], 2.2, (x, y) => broad(x, y) * 0.8 + fine(x, y) * 0.2);
+});
+
+// --- brushed metal -------------------------------------------------------
+
+/** Sampling the same row repeatedly stretches the noise into strands. */
+export const brushedRoughness = once(() => {
+  const streak = valueNoise(SIZE, 160, 5);
+  const drift = valueNoise(SIZE, 6, 61);
+  return grey(SIZE, [3, 1], (x, y) => 0.1 + streak(x, y * 0.06) * 0.26 + drift(x, y) * 0.07);
+});
+
+export const brushedNormal = once(() => {
+  const streak = valueNoise(SIZE, 190, 23);
+  return normalFromHeight(SIZE, [3, 1], 1.1, (x, y) => streak(x, y * 0.05));
+});
+
+// --- injection-moulded plastic -------------------------------------------
+
+/** Orange peel: the shallow, broad dimpling a moulded surface always has. */
+export const orangePeelNormal = once(() => {
+  const peel = valueNoise(SIZE, 26, 307);
+  const fine = valueNoise(SIZE, 70, 311);
+  return normalFromHeight(SIZE, [2, 4], 1.3, (x, y) => peel(x, y) * 0.85 + fine(x, y) * 0.15);
+});
+
+export const orangePeelRoughness = once(() => {
+  const peel = valueNoise(SIZE, 26, 313);
+  return grey(SIZE, [2, 4], (x, y) => 0.28 + peel(x, y) * 0.14);
+});
+
+// --- shared wear ---------------------------------------------------------
 
 /**
- * Tangent-space normals derived from the same kind of noise, so the frosting
- * bends light rather than only dulling it — a roughness map alone flattens
- * the surface instead of scattering across it.
- *
+ * Fine scratches for the clear coat. Nothing that has been handled is
+ * flawless, and a clearcoat with a perfectly even roughness reads as a
+ * render every time.
+ */
+export const scratchRoughness = once(() => {
+  const streak = valueNoise(SIZE, 150, 811);
+  const sparse = valueNoise(SIZE, 9, 823);
+  return grey(SIZE, [2, 2], (x, y) => {
+    const line = streak(x * 0.9, y * 0.04);
+    // Only the deepest part of each strand becomes a scratch.
+    const scratch = Math.max(0, line - 0.72) * 3.4;
+    return 0.06 + scratch * 0.5 + sparse(x, y) * 0.06;
+  });
+});
+
+// --- etched glass --------------------------------------------------------
+
+export const frostRoughness = once(() => {
+  const broad = valueNoise(SIZE, 14, 211);
+  const fine = valueNoise(SIZE, 56, 89);
+  return grey(SIZE, [2, 4], (x, y) => 0.24 + broad(x, y) * 0.5 + fine(x, y) * 0.16);
+});
+
+/**
  * three perturbs normals from screen-space derivatives when a mesh has no
  * tangents, so a plain box needs no extra attributes for this.
  */
-export function frostNormal() {
-  if (frostNorm) return frostNorm;
-  const size = 256;
-  const height = valueNoise(size, 28, 401);
-  const strength = 2.4;
-  frostNorm = makeRgbTexture(size, (x, y) => {
-    // Central differences on the height field give the surface gradient.
-    const dx = (height(x + 1, y) - height(x - 1, y)) * strength;
-    const dy = (height(x, y + 1) - height(x, y - 1)) * strength;
-    const len = Math.hypot(dx, dy, 1);
-    return [(-dx / len) * 0.5 + 0.5, (-dy / len) * 0.5 + 0.5, 1 / len * 0.5 + 0.5];
-  });
-  frostNorm.repeat.set(2, 4);
-  return frostNorm;
-}
+export const frostNormal = once(() => {
+  const height = valueNoise(SIZE, 28, 401);
+  return normalFromHeight(SIZE, [2, 4], 2.4, height);
+});
+
+// --- the slab ------------------------------------------------------------
+
+export const slabRoughness = once(() => {
+  const broad = valueNoise(SIZE, 7, 907);
+  const fine = valueNoise(SIZE, 34, 911);
+  return grey(SIZE, [3, 1], (x, y) => 0.34 + broad(x, y) * 0.24 + fine(x, y) * 0.1);
+});
+
+export const slabNormal = once(() => {
+  const broad = valueNoise(SIZE, 9, 919);
+  return normalFromHeight(SIZE, [3, 1], 1.2, broad);
+});

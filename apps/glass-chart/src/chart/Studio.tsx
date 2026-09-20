@@ -55,6 +55,18 @@ function createEmitterScene(preset: Lighting) {
   emit(config.back.color, config.back.power, [13, 5], [0, 2.5, -8], [0, 0, 0]);
   emit(config.floor.color, config.floor.power, [14, 10], [0, -4, 0], [-HALF_PI, 0, 0]);
 
+  // A ceiling run of separate panels rather than one broad source. Polished
+  // metal is a mirror, and a mirror of an even gradient is just a gradient —
+  // it takes hard-edged shapes up there for nickel to show the bright bands
+  // and dark gaps that read as metal.
+  for (let i = -2; i <= 2; i++) {
+    emit(config.key.color, config.key.power * 0.85, [1.5, 5], [i * 2.6, 6.4, -1], [HALF_PI, 0, 0]);
+  }
+
+  // Verticals catch the narrow side faces as the row turns.
+  emit(config.left.color, config.left.power * 0.7, [0.8, 6], [-4.5, 2, 4], [0, 0.6, 0]);
+  emit(config.right.color, config.right.power * 0.7, [0.8, 6], [4.5, 2, 4], [0, -0.6, 0]);
+
   return scene;
 }
 
@@ -116,6 +128,7 @@ export function Studio({ preset, exposure, lightFollow, refractionQuality }: Stu
 
   const keyLight = useRef<THREE.DirectionalLight>(null);
   const travelling = useRef<THREE.PointLight>(null);
+  const bounce = useRef<THREE.PointLight>(null);
 
   // The key swings with the pointer or the device tilt, and a second light
   // crawls the row on its own so highlights keep moving even when nothing is
@@ -133,6 +146,12 @@ export function Studio({ preset, exposure, lightFollow, refractionQuality }: Stu
       3.2,
       Math.sin(t * 0.3) * 6,
     );
+    bounce.current?.position.set(-3.5 - a.x * 2 * lightFollow, -0.6, 3);
+
+    // Turning the probe itself drags every reflection across every surface
+    // at once. Nothing else makes a still frame look as alive, and it costs
+    // one Euler per frame rather than a re-bake.
+    scene.environmentRotation.y = t * 0.035 + a.x * 0.5 * lightFollow;
   });
 
   return (
@@ -149,6 +168,8 @@ export function Studio({ preset, exposure, lightFollow, refractionQuality }: Stu
       />
       <directionalLight position={[-6, 3.5, -4]} intensity={0.35} color={config.fillLight} />
       <pointLight ref={travelling} intensity={28} distance={20} decay={2} color={config.keyLight} />
+      {/* Low warm kick off the slab, so the undersides are not dead. */}
+      <pointLight ref={bounce} intensity={10} distance={9} decay={2} color={config.fillLight} />
     </>
   );
 }

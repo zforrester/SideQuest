@@ -101,6 +101,7 @@ export function GlassBarChart({
               causticIntensity={dev.caustics ? dev.causticIntensity : 0}
               dispersion={dev.edgeHighlight ? dev.dispersion : 0}
               frost={dev.frost}
+              occlusion={dev.occlusion}
               refraction={dev.refraction}
             />
           </group>

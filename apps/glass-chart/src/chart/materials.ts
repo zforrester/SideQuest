@@ -1,11 +1,17 @@
 import * as THREE from 'three';
 
 import {
+  brushedNormal,
   brushedRoughness,
+  ceramicNormal,
   ceramicRoughness,
+  dustedNormal,
   dustedRoughness,
   frostNormal,
   frostRoughness,
+  orangePeelNormal,
+  orangePeelRoughness,
+  scratchRoughness,
 } from './textures';
 
 /**
@@ -67,6 +73,8 @@ export function materialLibrary(): Record<MaterialId, MaterialSpec> {
         roughness: 0.92,
         metalness: 0,
         roughnessMap: ceramicRoughness(),
+        normalMap: ceramicNormal(),
+        normalScale: new THREE.Vector2(0.35, 0.35),
         // Unglazed bisque has almost no specular lobe to speak of.
         specularIntensity: 0.22,
         sheen: 0.35,
@@ -89,6 +97,10 @@ export function materialLibrary(): Record<MaterialId, MaterialSpec> {
         // Injection-moulded plastic: a hard clearcoat over a soft body.
         clearcoat: 1,
         clearcoatRoughness: 0.06,
+        clearcoatRoughnessMap: scratchRoughness(),
+        roughnessMap: orangePeelRoughness(),
+        normalMap: orangePeelNormal(),
+        normalScale: new THREE.Vector2(0.3, 0.3),
         sheen: 0.22,
         sheenColor: new THREE.Color('#f2fadf'),
         sheenRoughness: 0.5,
@@ -173,6 +185,11 @@ export function materialLibrary(): Record<MaterialId, MaterialSpec> {
         metalness: 1,
         roughness: 0.24,
         roughnessMap: brushedRoughness(),
+        normalMap: brushedNormal(),
+        normalScale: new THREE.Vector2(0.22, 0.5),
+        clearcoat: 0.35,
+        clearcoatRoughness: 0.25,
+        clearcoatRoughnessMap: scratchRoughness(),
         anisotropy: 0.65,
         anisotropyRotation: Math.PI / 2,
         envMapIntensity: 1.35,
@@ -191,6 +208,8 @@ export function materialLibrary(): Record<MaterialId, MaterialSpec> {
         metalness: 0.72,
         roughness: 0.82,
         roughnessMap: dustedRoughness(),
+        normalMap: dustedNormal(),
+        normalScale: new THREE.Vector2(0.45, 0.45),
         clearcoat: 0.1,
         clearcoatRoughness: 0.85,
         envMapIntensity: 1.05,

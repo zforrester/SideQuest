@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 
 import type { MaterialSpec } from './materials';
+import { slabNormal, slabRoughness } from './textures';
 import {
   BAR_DEPTH,
   BAR_WIDTH,
@@ -60,17 +61,14 @@ export function Platform({ materials }: { materials: MaterialSpec[] }) {
     [width, depth],
   );
 
-  const footprintGeometry = useMemo(
-    () => new RoundedBoxGeometry(BAR_WIDTH * 1.2, 0.05, BAR_DEPTH * 1.2, 3, 0.014),
-    [],
-  );
-
   // Warm grey rather than black: a near-black shadow on an off-white set
   // reads as a hole punched in the slab.
   // With no shadow pass, these blobs are the grounding. The key sits up and
   // to the right, so they are offset and stretched to the left to read as a
   // cast shadow rather than a symmetrical smudge.
   const shadow = useBlobMaterial('#464a41', 0.72);
+  const slabNormalScale = useMemo(() => new THREE.Vector2(0.25, 0.25), []);
+
 
   return (
     <group>
@@ -87,13 +85,16 @@ export function Platform({ materials }: { materials: MaterialSpec[] }) {
           color="#b7b9ad"
           roughness={0.46}
           metalness={0}
-          clearcoat={0.3}
-          clearcoatRoughness={0.4}
-          envMapIntensity={0.65}
+          clearcoat={0.45}
+          clearcoatRoughness={0.34}
+          envMapIntensity={0.7}
+          roughnessMap={slabRoughness()}
+          normalMap={slabNormal()}
+          normalScale={slabNormalScale}
         />
       </mesh>
 
-      {materials.map((material, index) => (
+      {materials.map((_, index) => (
         <group key={index} position={[barOffsetX(index, count), 0, 0]}>
           {/* Contact shadow. */}
           <mesh
@@ -104,17 +105,6 @@ export function Platform({ materials }: { materials: MaterialSpec[] }) {
             renderOrder={-2}
           >
             <planeGeometry args={[BAR_WIDTH * 2.2, BAR_DEPTH * 2.2]} />
-          </mesh>
-          {/* A swatch of the bar's own stock, inlaid in the slab. */}
-          <mesh geometry={footprintGeometry} position={[0, 0.03, 0]} renderOrder={-1}>
-            <meshStandardMaterial
-              color={material.swatch}
-              roughness={0.55}
-              metalness={material.surface.metalness ?? 0}
-              transparent
-              opacity={0.5}
-              depthWrite={false}
-            />
           </mesh>
         </group>
       ))}

@@ -55,10 +55,21 @@ transparent clear there is nothing for the glass to refract and it goes dark.
 The page gradient behind the canvas is kept within a few values of it so the
 canvas edge does not show as a band.
 
-The grain, speckle and bisque maps in `src/chart/textures.ts` are generated as
-value-noise `DataTexture`s at startup, so the app still ships no image assets.
-They matter more than they sound: a perfectly uniform powder coat reads as
-plastic, and brushed metal without its grain reads as chrome.
+Every finish carries procedural surface detail from `src/chart/textures.ts` —
+roughness and normal maps generated as value-noise `DataTexture`s at startup,
+so the app still ships no image assets. Powder speckle, brushed strands,
+orange peel on the moulded plastic, lumpy bisque on the ceramic, etched
+scatter on the glass, and a scratch map on the clear coats. They matter more
+than they sound: a perfectly smooth, perfectly uniform surface is the
+clearest tell that something is computer generated, and it is the variation
+breaking up the highlights that sells a material.
+
+Bars also darken into the slab where they meet it, injected into the same
+shader as the edge highlight. The geometry is a unit box scaled on Y, so the
+shader gets a 0-to-1 height whatever the bar's size and multiplies it back up
+by the real height — that keeps the occlusion band a fixed size in world
+units rather than a fraction of a bar, which would smear across a tall one
+and pinch on a short one.
 
 ## Lighting
 
@@ -105,6 +116,14 @@ a disc, because the bar stands on the middle of that plane and a
 centre-weighted pool puts all its light exactly where it cannot be seen. A
 second mask measured on the un-offset UV keeps filaments from hanging over the
 edge of the slab as the pool slides.
+
+**The environment** is a set of hard-edged panels, not a smooth gradient: a
+ceiling run of separate softboxes plus verticals at the sides. Polished metal
+is a mirror, and a mirror of an even gradient is just a gradient — it takes
+shapes up there for nickel to show the bright bands and dark gaps that read
+as metal. The probe itself turns slowly (`scene.environmentRotation`), which
+drags every reflection across every surface at once for the cost of one Euler
+per frame; nothing else makes a still frame look as alive.
 
 **Dispersion and frosting** are on the glass only — chromatic fringing along a
 metal edge is not a thing that happens.
@@ -181,7 +200,7 @@ src/chart/
   Platform.tsx           base slab and contact shadows
   CameraControl.tsx      applies live camera changes from the dev sheet
   Caustics.tsx           filaments cast by the translucent finishes
-  edgeHighlight.ts       fresnel rim injected into the bar materials
+  barSurface.ts          fresnel rim and contact occlusion, injected
   lightInput.ts          the shared pointer / tilt aim
   geometry.ts            shared geometry and layout constants
   anim.ts                damping and spring helpers
@@ -195,8 +214,14 @@ src/ui/                  the 2D chrome over the canvas, incl. DevSheet
 Grounding is done with soft procedural blobs rather than a shadow pass.
 `PCFSoftShadowMap` was removed in three r186, and the remaining soft option
 (VSM) needs a float render target that is unreliable on mobile GPUs — and at
-this near-horizontal camera angle a real cast shadow adds little that the blobs
-don't. Dropping the pass also saves a full shadow render every frame.
+this camera angle a real cast shadow adds little that the blobs don't.
+Dropping the pass also saves a full shadow render every frame.
+
+There is no reflection of the bars in the slab. It was built and then taken
+out: the camera looks along the slab rather than down at it, so the surface
+in front of the row is only a few pixels deep, and the contact shadow already
+occupies exactly that area. Even at double strength the smear was invisible,
+so it was not worth the draw calls.
 
 ## Verification
 

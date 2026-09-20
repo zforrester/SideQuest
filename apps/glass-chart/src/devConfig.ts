@@ -22,6 +22,8 @@ export type DevConfig = {
   refractionQuality: number;
   /** Multiplies each glass finish's own frost depth. */
   frost: number;
+  /** Contact darkening where a bar meets the slab. */
+  occlusion: number;
   /** How far the pointer or tilt swings the light. */
   lightFollow: number;
   growDuration: number;
@@ -47,6 +49,7 @@ export const DEFAULT_DEV: DevConfig = {
   dispersion: 1,
   refractionQuality: 0.6,
   frost: 1,
+  occlusion: 0.32,
   lightFollow: 0.85,
   growDuration: 0.6,
   stagger: 0.08,
@@ -112,6 +115,7 @@ export const DEV_GROUPS: {
     title: 'Form & motion',
     sliders: [
       { key: 'bevel', label: 'Edge radius', min: 0, max: 0.12, step: 0.002, precision: 3 },
+      { key: 'occlusion', label: 'Contact shading', min: 0, max: 0.8, step: 0.01, precision: 2 },
       { key: 'growDuration', label: 'Grow duration', min: 0.15, max: 2, step: 0.05, precision: 2 },
       { key: 'stagger', label: 'Stagger', min: 0, max: 0.3, step: 0.01, precision: 2 },
     ],

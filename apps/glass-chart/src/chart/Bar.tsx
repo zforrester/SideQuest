@@ -5,7 +5,7 @@ import * as THREE from 'three';
 import type { Datum } from '../data';
 import { Spring, damp } from './anim';
 import { Caustics } from './Caustics';
-import { attachEdgeHighlight } from './edgeHighlight';
+import { attachBarSurface } from './barSurface';
 import { BAR_WIDTH, MAX_BAR_HEIGHT, type BarGeometries } from './geometry';
 import { aimDirection } from './lightInput';
 import type { MaterialSpec } from './materials';
@@ -27,6 +27,7 @@ type BarProps = {
   causticIntensity: number;
   dispersion: number;
   frost: number;
+  occlusion: number;
   /** Real refraction, or the cheap opacity fallback. */
   refraction: boolean;
 };
@@ -49,6 +50,7 @@ export function Bar({
   causticIntensity,
   dispersion,
   frost,
+  occlusion,
   refraction,
 }: BarProps) {
   const root = useRef<THREE.Group>(null);
@@ -72,7 +74,7 @@ export function Bar({
     const tint = new THREE.Color(
       (material.surface.color as THREE.ColorRepresentation) ?? '#ffffff',
     ).lerp(new THREE.Color('#ffffff'), 0.65);
-    return attachEdgeHighlight(surface, tint, rimPower);
+    return attachBarSurface(surface, tint, rimPower);
     // rimPower only seeds the uniform; it is updated per frame below.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [surface, material]);
@@ -147,10 +149,14 @@ export function Bar({
       ? opaqueBase * (0.45 + 0.55 * state.presence)
       : (material.fallbackOpacity ?? opaqueBase) * state.presence;
 
-    // Frosting depth is a live control, so the normal scale is set per frame
-    // rather than baked into the material.
-    const depth = (material.frost ?? 0) * frost;
-    if (surface.normalMap) surface.normalScale.set(depth, depth);
+    // Frosting depth is a live control, so the glass sets its normal scale
+    // per frame. Everything else keeps the scale its own spec asked for —
+    // driving them all from here would flatten the surface detail on the
+    // opaque finishes to nothing.
+    if (material.frost !== undefined && surface.normalMap) {
+      const depth = material.frost * frost;
+      surface.normalScale.set(depth, depth);
+    }
 
     surface.dispersion = (material.dispersion ?? 0) * dispersion;
 
@@ -161,6 +167,8 @@ export function Bar({
     rim.uRimDir.value.copy(aimDirection(6, delta, lightFollow));
     rim.uRimStrength.value = rimStrength * state.presence * revealed * (1 + state.glow * 0.8);
     rim.uRimPower.value = rimPower;
+    rim.uBarHeight.value = height;
+    rim.uOcclusion.value = occlusion * revealed;
 
     // Keep the tap target the size of the bar, plus a little headroom so a
     // short bar is still comfortable to hit with a thumb.
