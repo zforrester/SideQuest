@@ -17,7 +17,14 @@ export const LIGHTING: { id: Lighting; label: string; blurb: string }[] = [
   { id: 'dusk', label: 'Dusk', blurb: 'Low amber key, deep sage shadow' },
 ];
 
-export const BACKDROP_GRADIENT: ColorValue[] = ['#f3f3ef', '#eceee7', '#e6e9df', '#eeefe9'];
+/**
+ * The 3D scene needs an opaque background of its own for refraction to have
+ * anything to sample, so the page gradient is kept within a few values of it
+ * — otherwise the canvas edge shows as a visible band.
+ */
+export const SCENE_BACKGROUND = '#ebece5';
+
+export const BACKDROP_GRADIENT: ColorValue[] = ['#eff0ea', '#ecede6', '#e9eae2', '#eeefe8'];
 
 /** Near-black used for the primary pills, matching the reference chrome. */
 export const INK = '#16181a';

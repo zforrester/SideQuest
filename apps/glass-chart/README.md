@@ -31,22 +31,29 @@ at it. The app has no native custom code, so it runs in Expo Go.
 | --- | --- | --- |
 | Apr | Chalk ceramic | Matte, near-zero specular, procedural roughness for unglazed bisque |
 | May | Seafoam plastic | Soft lime-green body under a hard clearcoat — injection-moulded |
-| Jun | Frosted quartz | Translucent shell, etched surface, milky core |
-| Jul | Olive glass | Translucent shell, near mirror-smooth, tinted core for density |
+| Jun | Frosted quartz | Transmissive, etched surface, rough enough to diffuse what is behind |
+| Jul | Olive glass | Transmissive and near mirror-smooth; tint comes from attenuation, so it deepens with depth |
 | Aug | Brushed nickel | Full metal, anisotropic, stretched-noise grain map |
 | Sep | Dusted titanium | Metal scattered wide by a powder coat, fine speckle map |
 
-Bars are square-edged: plain `BoxGeometry`, hard 90-degree corners, per-face
-normals. That also sidesteps a wrinkle of the rest of the rig — bars are
+Each bar is one box: plain `BoxGeometry`, hard 90-degree corners, per-face
+normals, nothing nested inside it and nothing capping it. That also sidesteps a wrinkle of the rest of the rig — bars are
 unit-height and scaled on Y at draw time, so any corner radius would stretch
 into an ellipse as a bar grows, and a true box has nothing to stretch. The dev
 sheet can dial a radius back in, which switches to a rounded mesh.
 
-Opaque finishes are one mesh. Translucent ones are drawn as a back-face pass
-and a front-face pass over the same geometry, plus an inner core so the glass
-reads as cast rather than hollow. three.js sorts transparent objects
-far-to-near and breaks the tie between the two passes by creation order, so
-the back wall reads through the front without hand-managing `renderOrder`.
+The translucent finishes use real transmission, so what sits behind them is
+refracted rather than merely showing through at reduced opacity — and their
+roughness picks the mip level of the refraction buffer, which is what blurs
+and diffuses the objects behind the glass. Because transmission needs an
+extra render of the scene each frame, the dev sheet can switch it off (the
+bars fall back to plain opacity) and scale the buffer down; half resolution
+is both a real saving and a little more diffusion for free.
+
+That also means the scene needs an opaque background of its own: against a
+transparent clear there is nothing for the glass to refract and it goes dark.
+The page gradient behind the canvas is kept within a few values of it so the
+canvas edge does not show as a band.
 
 The grain, speckle and bisque maps in `src/chart/textures.ts` are generated as
 value-noise `DataTexture`s at startup, so the app still ships no image assets.
@@ -102,14 +109,10 @@ edge of the slab as the pool slides.
 **Dispersion and frosting** are on the glass only — chromatic fringing along a
 metal edge is not a thing that happens.
 
-three's own `dispersion` property only takes effect inside the transmission
-path, which needs the render target this app avoids on mobile, so the split is
-done in the same rim injection. Square-edged bars have one normal per face, so
-there is no geometric gradient at a corner for a classic edge fringe to sit
-on; keying the separation to the view angle instead puts it across the face,
-where a flat pane of glass shows it anyway. The spectrum is pulled back
-towards white before it is mixed in — at full saturation it stops reading as a
-sheen on olive glass and starts reading as blue glass.
+Dispersion is three's own `dispersion` property, which splits the refracted
+background by wavelength. It only works inside the transmission path, so it
+became available once the glass became genuinely refractive; before that it
+was hand-rolled in the rim shader, and that code is gone.
 
 The frosting is a noise roughness map plus a normal map derived from the same
 height field (`textures.ts`), so it bends light rather than only dulling it; a

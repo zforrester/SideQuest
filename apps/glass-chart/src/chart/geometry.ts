@@ -6,16 +6,12 @@ export const BAR_DEPTH = 0.62;
 export const BAR_GAP = 0.3;
 export const MAX_BAR_HEIGHT = 5.4;
 
-/** Inset of the core inside a translucent shell, as a fraction of the bar. */
-export const CORE_INSET = 0.58;
-
 export const PLATE_THICKNESS = 0.16;
 export const PLATE_PAD = 0.42;
 
+/** A bar is one box. Nothing nested, nothing capping it. */
 export type BarGeometries = {
   shell: THREE.BufferGeometry;
-  core: THREE.BufferGeometry;
-  cap: THREE.BufferGeometry;
 };
 
 function baseAnchored(geometry: THREE.BufferGeometry) {
@@ -41,43 +37,17 @@ export function makeBarGeometries(bevel: number): BarGeometries {
   const radius = THREE.MathUtils.clamp(bevel, 0, maxRadius);
 
   if (radius < SHARP) {
-    return {
-      shell: baseAnchored(new THREE.BoxGeometry(BAR_WIDTH, 1, BAR_DEPTH)),
-      core: baseAnchored(
-        new THREE.BoxGeometry(BAR_WIDTH * CORE_INSET, 1, BAR_DEPTH * CORE_INSET),
-      ),
-      cap: new THREE.BoxGeometry(BAR_WIDTH * 0.84, 0.05, BAR_DEPTH * 0.84),
-    };
+    return { shell: baseAnchored(new THREE.BoxGeometry(BAR_WIDTH, 1, BAR_DEPTH)) };
   }
 
   const segments = radius > 0.05 ? 4 : 2;
   return {
     shell: baseAnchored(new RoundedBoxGeometry(BAR_WIDTH, 1, BAR_DEPTH, segments, radius)),
-    core: baseAnchored(
-      new RoundedBoxGeometry(
-        BAR_WIDTH * CORE_INSET,
-        1,
-        BAR_DEPTH * CORE_INSET,
-        segments,
-        Math.min(radius, BAR_WIDTH * CORE_INSET * 0.45),
-      ),
-    ),
-    // The cap is thin, so its radius has to stay under half its height or
-    // RoundedBoxGeometry degenerates.
-    cap: new RoundedBoxGeometry(
-      BAR_WIDTH * 0.84,
-      0.05,
-      BAR_DEPTH * 0.84,
-      2,
-      Math.min(radius, 0.018),
-    ),
   };
 }
 
 export function disposeBarGeometries(geometries: BarGeometries) {
   geometries.shell.dispose();
-  geometries.core.dispose();
-  geometries.cap.dispose();
 }
 
 export function barOffsetX(index: number, count: number) {

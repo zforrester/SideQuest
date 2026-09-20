@@ -64,9 +64,11 @@ type StudioProps = {
   exposure: number;
   /** How far the pointer or device tilt swings the key. */
   lightFollow: number;
+  /** Scales the refraction buffer: lower is cheaper, and softer. */
+  refractionQuality: number;
 };
 
-export function Studio({ preset, exposure, lightFollow }: StudioProps) {
+export function Studio({ preset, exposure, lightFollow, refractionQuality }: StudioProps) {
   const renderer = useThree((state) => state.gl);
   const scene = useThree((state) => state.scene);
   const config = STUDIO_PRESETS[preset];
@@ -105,6 +107,12 @@ export function Studio({ preset, exposure, lightFollow }: StudioProps) {
   useEffect(() => {
     renderer.toneMappingExposure = config.exposure * exposure;
   }, [renderer, config.exposure, exposure]);
+
+  useEffect(() => {
+    // Half resolution is both a real saving on the extra scene render that
+    // transmission costs, and a touch more diffusion for free.
+    renderer.transmissionResolutionScale = refractionQuality;
+  }, [renderer, refractionQuality]);
 
   const keyLight = useRef<THREE.DirectionalLight>(null);
   const travelling = useRef<THREE.PointLight>(null);

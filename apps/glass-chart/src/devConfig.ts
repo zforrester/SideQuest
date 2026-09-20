@@ -18,12 +18,15 @@ export type DevConfig = {
   causticIntensity: number;
   /** Multiplies each glass finish's own dispersion amount. */
   dispersion: number;
+  /** Resolution of the refraction buffer; lower is cheaper and softer. */
+  refractionQuality: number;
   /** Multiplies each glass finish's own frost depth. */
   frost: number;
   /** How far the pointer or tilt swings the light. */
   lightFollow: number;
   growDuration: number;
   stagger: number;
+  refraction: boolean;
   autoSway: boolean;
   caustics: boolean;
   edgeHighlight: boolean;
@@ -42,10 +45,12 @@ export const DEFAULT_DEV: DevConfig = {
   rimPower: 3.2,
   causticIntensity: 1.1,
   dispersion: 1,
+  refractionQuality: 0.6,
   frost: 1,
   lightFollow: 0.85,
   growDuration: 0.6,
   stagger: 0.08,
+  refraction: true,
   autoSway: true,
   caustics: true,
   edgeHighlight: true,
@@ -93,10 +98,12 @@ export const DEV_GROUPS: {
       { key: 'rimStrength', label: 'Edge highlight', min: 0, max: 3, step: 0.02, precision: 2 },
       { key: 'rimPower', label: 'Edge falloff', min: 1, max: 8, step: 0.1 },
       { key: 'causticIntensity', label: 'Caustics', min: 0, max: 2.5, step: 0.02, precision: 2 },
-      { key: 'dispersion', label: 'Glass dispersion', min: 0, max: 3, step: 0.02, precision: 2 },
+      { key: 'dispersion', label: 'Glass dispersion', min: 0, max: 4, step: 0.02, precision: 2 },
+      { key: 'refractionQuality', label: 'Refraction detail', min: 0.2, max: 1, step: 0.05, precision: 2 },
       { key: 'frost', label: 'Glass frosting', min: 0, max: 3, step: 0.02, precision: 2 },
     ],
     toggles: [
+      { key: 'refraction', label: 'Refraction (needs a render target)' },
       { key: 'edgeHighlight', label: 'Edge highlights' },
       { key: 'caustics', label: 'Caustics' },
     ],

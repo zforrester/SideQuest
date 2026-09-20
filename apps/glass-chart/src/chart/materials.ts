@@ -13,9 +13,9 @@ import {
  * chart doubles as a swatch board: plastic, frosted glass, tinted glass,
  * polished metal, matte ceramic, powder-coated metal.
  *
- * `solid` materials are one opaque mesh. `translucent` ones are drawn as a
- * back-face pass and a front-face pass over the same geometry, with an
- * optional inner core so the glass reads as cast rather than hollow.
+ * Every finish is a single box. The translucent ones use real transmission,
+ * so what sits behind them is refracted and — driven by their roughness —
+ * blurred, rather than simply showing through at reduced opacity.
  */
 
 export type MaterialId =
@@ -43,12 +43,14 @@ export type MaterialSpec = {
   dispersion?: number;
   /** Depth of the etched surface wobble, scaling the frost normal map. */
   frost?: number;
-  /** Props for the single opaque mesh, or for the glass shell. */
+  /** Props for the bar's one and only mesh. */
   surface: THREE.MeshPhysicalMaterialParameters;
-  /** Back-face pass, translucent materials only. */
-  backface?: THREE.MeshPhysicalMaterialParameters;
-  /** Inner volume that gives translucent bars some density. */
-  core?: THREE.MeshPhysicalMaterialParameters;
+  /**
+   * Opacity to fall back to when refraction is switched off in the dev
+   * sheet — transmission needs a render target, and that is the one part of
+   * this scene most likely to struggle on an older mobile GPU.
+   */
+  fallbackOpacity?: number;
 };
 
 /** Lazily built so the procedural textures are only generated if used. */
@@ -100,16 +102,22 @@ export function materialLibrary(): Record<MaterialId, MaterialSpec> {
       swatch: '#e9eae4',
       swatchInk: 'dark',
       kind: 'translucent',
-      dispersion: 0.6,
+      dispersion: 0.35,
       frost: 0.6,
+      fallbackOpacity: 0.5,
       surface: {
-        color: '#f2f3ed',
-        roughness: 0.42,
+        color: '#f4f5f0',
         metalness: 0,
+        // Roughness is the blur: three picks the mip level of the
+        // transmission buffer from it, so a rough surface diffuses whatever
+        // is behind the bar instead of merely tinting it.
+        roughness: 0.3,
+        transmission: 1,
+        thickness: 0.45,
         ior: 1.46,
+        attenuationColor: new THREE.Color('#eef0e8'),
+        attenuationDistance: 5,
         transparent: true,
-        opacity: 0.5,
-        depthWrite: false,
         clearcoat: 0.45,
         clearcoatRoughness: 0.4,
         envMapIntensity: 1.1,
@@ -117,24 +125,6 @@ export function materialLibrary(): Record<MaterialId, MaterialSpec> {
         normalMap: frostNormal(),
         iridescence: 0.25,
         iridescenceIOR: 1.25,
-      },
-      backface: {
-        color: '#e6e8e0',
-        roughness: 0.55,
-        transparent: true,
-        opacity: 0.26,
-        depthWrite: false,
-        envMapIntensity: 0.9,
-        roughnessMap: frostRoughness(),
-        normalMap: frostNormal(),
-      },
-      core: {
-        color: '#f6f7f2',
-        roughness: 0.75,
-        metalness: 0,
-        transparent: true,
-        opacity: 0.55,
-        envMapIntensity: 0.7,
       },
     },
 
@@ -144,41 +134,30 @@ export function materialLibrary(): Record<MaterialId, MaterialSpec> {
       swatch: '#8c9164',
       swatchInk: 'light',
       kind: 'translucent',
-      dispersion: 0.8,
+      dispersion: 1.1,
       frost: 0.3,
+      fallbackOpacity: 0.44,
       surface: {
-        color: '#9aa06d',
-        roughness: 0.03,
+        // Near-white base with the tint carried by attenuation, so the glass
+        // deepens with the distance light travels through it rather than
+        // sitting on the surface like paint.
+        color: '#dfe3c8',
         metalness: 0,
+        roughness: 0.08,
+        transmission: 1,
+        thickness: 0.8,
         ior: 1.52,
+        attenuationColor: new THREE.Color('#97a066'),
+        attenuationDistance: 3.4,
         transparent: true,
-        opacity: 0.44,
-        depthWrite: false,
         clearcoat: 1,
-        clearcoatRoughness: 0.02,
+        clearcoatRoughness: 0.03,
         specularIntensity: 1,
         envMapIntensity: 1.7,
         roughnessMap: frostRoughness(),
         normalMap: frostNormal(),
         iridescence: 0.4,
         iridescenceIOR: 1.3,
-      },
-      backface: {
-        color: '#6f7548',
-        roughness: 0.06,
-        transparent: true,
-        opacity: 0.3,
-        depthWrite: false,
-        envMapIntensity: 1.4,
-        normalMap: frostNormal(),
-      },
-      core: {
-        color: '#7e8455',
-        roughness: 0.12,
-        metalness: 0,
-        transparent: true,
-        opacity: 0.5,
-        envMapIntensity: 1.2,
       },
     },
 

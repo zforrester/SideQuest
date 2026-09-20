@@ -5,7 +5,7 @@ import * as THREE from 'three';
 import type { DevConfig } from '../devConfig';
 import type { Datum } from '../data';
 import { MAX_VALUE } from '../data';
-import type { Lighting } from '../theme';
+import { SCENE_BACKGROUND, type Lighting } from '../theme';
 import { Bar } from './Bar';
 import { CameraControl } from './CameraControl';
 import { Platform } from './Platform';
@@ -55,12 +55,22 @@ export function GlassBarChart({
         gl.toneMapping = THREE.NeutralToneMapping;
       }}
     >
+      {/* Transmission samples this, so the scene needs a real background:
+          against a transparent clear the glass would refract nothing and go
+          dark. The page behind is flattened to the same tone to hide the
+          canvas seam. */}
+      <color attach="background" args={[SCENE_BACKGROUND]} />
       <CameraControl
         distance={dev.cameraDistance}
         height={dev.cameraHeight}
         fov={dev.fov}
       />
-      <Studio preset={lighting} exposure={dev.exposure} lightFollow={dev.lightFollow} />
+      <Studio
+        preset={lighting}
+        exposure={dev.exposure}
+        lightFollow={dev.lightFollow}
+        refractionQuality={dev.refractionQuality}
+      />
 
       <Rig
         count={series.length}
@@ -91,6 +101,7 @@ export function GlassBarChart({
               causticIntensity={dev.caustics ? dev.causticIntensity : 0}
               dispersion={dev.edgeHighlight ? dev.dispersion : 0}
               frost={dev.frost}
+              refraction={dev.refraction}
             />
           </group>
         ))}
